@@ -54,10 +54,6 @@
     {
       "name": "watchKit",
       "srcPath": "./watchKit",
-    },
-    {
-      "name": "vhalllive",
-      "srcPath": "./SDK/vhallLive",
     }
   ]
 }
