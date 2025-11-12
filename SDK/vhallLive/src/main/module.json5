@@ -1,0 +1,17 @@
+{
+  "module": {
+    "name": "vhalllive",
+    "type": "har",
+    "deviceTypes": [
+      "default"
+    ],
+    "requestPermissions": [
+      {
+        "name" : "ohos.permission.INTERNET",
+      },
+      {
+        "name" : "ohos.permission.GET_NETWORK_INFO",
+      }
+    ]
+  }
+}

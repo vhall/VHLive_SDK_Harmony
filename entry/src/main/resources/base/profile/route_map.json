@@ -1,0 +1,19 @@
+{
+  "routerMap": [
+    {
+      "name": "LiveEnterPage",
+      "pageSourceFile": "src/main/ets/pages/LiveEnterPage.ets",
+      "buildFunction": "LiveEnterPageBuilder"
+    },
+    {
+      "name": "KeySettingPage",
+      "pageSourceFile": "src/main/ets/pages/KeySettingPage.ets",
+      "buildFunction": "KeySettingPageBuilder"
+    },
+    {
+      "name": "InvitationCard",
+      "pageSourceFile": "src/main/ets/pages/InvitationCard.ets",
+      "buildFunction": "InvitationCardBuilder"
+    }
+  ]
+}

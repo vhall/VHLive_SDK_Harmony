@@ -1,0 +1,108 @@
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "description": "$string:module_desc",
+    "mainElement": "EntryAbility",
+    "deviceTypes": [
+      "phone"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "routerMap": "$profile:route_map",
+    "abilities": [
+      {
+        "name": "EntryAbility",
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "description": "$string:EntryAbility_desc",
+        "icon": "$media:vhall_dev",
+        "label": "$string:EntryAbility_label",
+        "startWindowIcon": "$media:vhall_dev",
+        "startWindowBackground": "$color:start_window_background",
+        "exported": true,
+        "backgroundModes": [
+          "audioPlayback"
+        ],
+        "skills": [
+          {
+            "entities": [
+              "entity.system.home",
+              "entity.system.browsable"
+            ],
+            "actions": [
+              "ohos.want.action.home",
+              "ohos.want.action.viewData"
+            ]
+          }
+        ]
+      }
+    ],
+    "extensionAbilities": [
+      {
+        "name": "EntryBackupAbility",
+        "srcEntry": "./ets/entrybackupability/EntryBackupAbility.ets",
+        "type": "backup",
+        "exported": false,
+        "metadata": [
+          {
+            "name": "ohos.extension.backup",
+            "resource": "$profile:backup_config"
+          }
+        ],
+      }
+    ],
+    "requestPermissions": [
+      {
+        "name": "ohos.permission.INTERNET",
+        "reason": "$string:internet_permission_reason",
+        "usedScene": {
+          "when": "always"
+        }
+      },
+      {
+        "name": "ohos.permission.GET_NETWORK_INFO",
+        "reason": "$string:internet_permission_reason",
+        "usedScene": {
+          "when": "always"
+        }
+      }
+    ],
+    "querySchemes": [
+      // 抖音
+      'snssdk1128',
+      // 微博
+      'sinaweibo',
+      // 小红书
+      'xhsdiscover',
+      // 哔哩哔哩
+      'bilibili',
+      // 快手
+      'kwai',
+      // 微信
+      'weixin',
+      // QQ
+      'mqqapi',
+      // 支付宝
+      'alipays',
+      // 云闪付
+      'upwallet',
+      // 京东
+      'openapp.jdmobile',
+      // 美团
+      'imeituan',
+      // 拼多多
+      'pinduoduo',
+      // 淘宝
+      'tbopen',
+      // 高德地图
+      'amapuri',
+      // 腾讯会议
+      'wemeet',
+      // 华为地图（花瓣地图）
+      'maps',
+      // 知乎
+      'zhihu'
+    ]
+  }
+}

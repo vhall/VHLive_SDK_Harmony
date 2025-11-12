@@ -1,0 +1,21 @@
+/**
+ * 聊天消息类型常量定义。
+ *
+ * 特别注意：本类中定义的常量切勿重复，否则将影响聊天列表UI的正常展现！
+ */
+export default class MsgType {
+
+  /** 聊天消息类型之：普通文字消息 */
+  static readonly TYPE_TEXT: number         = 0;
+  /** 聊天消息类型之：图片消息（即消息内容就是存放于服务端的磁盘图片文件名） */
+  static readonly TYPE_IMAGE: number        = 1;
+  /** 聊天消息类型之：语音留言消息（即消息内容就是存放于服务端的语音留言文件名） */
+  static readonly TYPE_VOICE: number        = 2;
+
+  /** 聊天消息类型之：系统消息或提示信息（此类消息通常由服务器即f="0"的用户发出）. */
+  static readonly TYPE_SYSTEAM$INFO: number = 90;
+
+  static readonly VOD_MOMENT_TIME: string = "vod_moment";
+  static readonly VOD_SUBTITLE_TIME: string = "subtitle_time";
+  static readonly LOTTERY_MSG: string = "LotteryDialog_msg";
+}

@@ -1,0 +1,59 @@
+{
+  "routerMap": [
+    {
+      "name": "WatchLivePage",
+      "pageSourceFile": "src/main/ets/pages/WatchLivePage.ets",
+      "buildFunction": "WatchLivePageBuilder"
+    },
+    {
+      "name": "WatchVodPage",
+      "pageSourceFile": "src/main/ets/pages/WatchVodPage.ets",
+      "buildFunction": "WatchVodPagePageBuilder"
+    },
+    {
+      "name": "ReservationPage",
+      "pageSourceFile": "src/main/ets/pages/ReservationPage.ets",
+      "buildFunction": "ReservationPagePageBuilder"
+    },
+    {
+      "name": "VHH5LivePage",
+      "pageSourceFile": "src/main/ets/pages/VHH5LivePage.ets",
+      "buildFunction": "H5LivePageBuilder"
+    },
+    {
+      "name": "QuestionnairePage",
+      "pageSourceFile": "src/main/ets/pages/QuestionnairePage.ets",
+      "buildFunction": "QuestionnairePageBuilder"
+    },
+    {
+      "name": "ExamPage",
+      "pageSourceFile": "src/main/ets/pages/ExamPage.ets",
+      "buildFunction": "ExamPageBuilder"
+    },
+    {
+      "name": "WebViewPage",
+      "pageSourceFile": "src/main/ets/pages/WebViewPage.ets",
+      "buildFunction": "WebViewPageBuilder"
+    },
+    {
+      "name": "GoodsWebViewPage",
+      "pageSourceFile": "src/main/ets/pages/GoodsPage.ets",
+      "buildFunction": "GoodsWebViewPageBuilder"
+    },
+    {
+      "name": "StartPage",
+      "pageSourceFile": "src/main/ets/pages/StartPage.ets",
+      "buildFunction": "StartPageBuilder"
+    },
+    {
+      "name": "StartDialogPage",
+      "pageSourceFile": "src/main/ets/components/Start/StartDialogPage.ets",
+      "buildFunction": "StartDialogPageBuilder"
+    },
+    {
+      "name": "ForcedLoginPage",
+      "pageSourceFile": "src/main/ets/components/Start/ForcedLogin.ets",
+      "buildFunction": "ForcedLoginPageBuilder"
+    }
+  ]
+}

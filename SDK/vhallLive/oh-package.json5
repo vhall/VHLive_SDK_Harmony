@@ -1,0 +1,17 @@
+{
+  "name": "@vhall/vhall_live",
+  "version": "1.0.0",
+  "description": "微吼直播观看端鸿蒙版本SDK",
+  "main": "Index.ets",
+  "author": "vhall",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "@vhall/vhallyun-framework": "1.10.3",
+    "@vhall/vhallyun-ims": "1.10.4",
+    "@vhall/vhallyun-lss-vod": "1.10.5",
+    "@vhall/vhallyun-doc": "1.10.8"
+  },
+  "repository": "https://github.com/vhall/VHLive_SDK_Harmony",
+  "compatibleSdkVersion": "5.0.0(12)",
+  "compatibleSdkType": "HarmonyOS"
+}

@@ -1,0 +1,63 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "C:\\Users\\yuqiu\\.ohos\\config\\default_vhall_saas_sdk_harmony_8W3aH_2mWSoVRvztlS0vqoJEG1Dx0KuMe0EdNPxfh7A=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001A5385680E49186CA1632B55820FDF5A399F74A4B969390499E343C4F981A2674842380BBFF867",
+          "profile": "C:\\Users\\yuqiu\\.ohos\\config\\default_vhall_saas_sdk_harmony_8W3aH_2mWSoVRvztlS0vqoJEG1Dx0KuMe0EdNPxfh7A=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "C:\\Users\\yuqiu\\.ohos\\config\\default_vhall_saas_sdk_harmony_8W3aH_2mWSoVRvztlS0vqoJEG1Dx0KuMe0EdNPxfh7A=.p12",
+          "storePassword": "0000001A85F358D0702573A4186B2CA6156DD0B5AA3D098992EC23FE22E210C91D5370B2C854D04DE1C6"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compatibleSdkVersion": "5.0.0(12)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "watchKit",
+      "srcPath": "./watchKit",
+    },
+    {
+      "name": "vhalllive",
+      "srcPath": "./SDK/vhallLive",
+    }
+  ]
+}
