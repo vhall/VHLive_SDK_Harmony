@@ -59,6 +59,11 @@ export struct QaComponent {
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
   @State likeIcons: LikeIcon[] = [] // 存储所有点赞图标
   private animationId: number = 0 // 动画ID
+  // 问答历史记录 type为：question
+  private qaQuestion: string = "question";
+  // 问答历史记录 type为：answer
+  private qaAnswer: string = "answer";
+
   // emoji表情数组
   private readonly emojis: string[] = [
     '❤️', '🧡', '💛', '💚', '💙', '💜',
@@ -596,7 +601,7 @@ export struct QaComponent {
             ListItem() {
               Column({ space: 8 }) {
                 // 提问
-                if (item.type === VHRoomEventType.QUESTION_ANSWER_QUESTION ||
+                if (item.type === this.qaQuestion ||
                   item.type === VHRoomEventType.QUESTION_ANSWER_CREATE)
                 Row() {
                   Image(item.avatar === '' ? $r("app.media.icon_visitorvatar") : item.avatar)
@@ -643,7 +648,7 @@ export struct QaComponent {
                 .alignItems(VerticalAlign.Top)
 
                 //  提问
-                if (item.type === VHRoomEventType.QUESTION_ANSWER_ANSWER ||
+                if (item.type === this.qaAnswer ||
                   item.type === VHRoomEventType.QUESTION_ANSWER_COMMIT)
                 Row() {
                   Image(item.avatar === '' ? $r("app.media.icon_visitorvatar") : item.avatar)
@@ -676,7 +681,7 @@ export struct QaComponent {
                       }.justifyContent(FlexAlign.Start).alignItems(VerticalAlign.Top)
 
                       //  回复
-                      if (item.type === VHRoomEventType.QUESTION_ANSWER_ANSWER ||
+                      if (item.type === this.qaAnswer ||
                         item.type === VHRoomEventType.QUESTION_ANSWER_COMMIT)
                       Column() {
                         Row() {

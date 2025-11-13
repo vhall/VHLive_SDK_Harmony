@@ -67,6 +67,7 @@ export struct VHGoodsComponent {
       });
   }
 
+  //用户获取活动商品设置
   GoodsActivitySettings() {
     VHSaaSDK.getInstance().GoodsActivitySettings(this.webinars?.webinar!.id.toString(), '',
       {
@@ -239,18 +240,22 @@ export struct VHGoodsComponent {
                       .enabled(item.covered_status == 0 ? true : false)
                       .backgroundColor('#fb2626')
                       .onClick(() => {
-                        //点击跳转支付页面,购买类型;1.平台购买 2.外链购买 3.自定义购买(APP嵌入) 4.自定义购买(小程序嵌入)
-                        if (item.buy_type == 1) {
-                          this.GoodsData = item
-                          this.OrderDialog.open()
-                        } else if (item.buy_type == 2) {
-                          const context: common.UIAbilityContext =
-                            this.getUIContext().getHostContext()! as common.UIAbilityContext;
-                          startBrowsableAbility(context);
-                        } else if (item.buy_type == 3) {
-                          ToastUtil.showToast('APP嵌入自定义购买')
-                        } else if (item.buy_type == 4) {
-                          ToastUtil.showToast('小程序嵌入自定义购买')
+                        if (item.covered_status == 0) {
+                          //点击跳转支付页面,购买类型;1.平台购买 2.外链购买 3.自定义购买(APP嵌入) 4.自定义购买(小程序嵌入)
+                          if (item.buy_type == 1) {
+                            this.GoodsData = item
+                            this.OrderDialog.open()
+                          } else if (item.buy_type == 2) {
+                            const context: common.UIAbilityContext =
+                              this.getUIContext().getHostContext()! as common.UIAbilityContext;
+                            startBrowsableAbility(context);
+                          } else if (item.buy_type == 3) {
+                            ToastUtil.showToast('APP嵌入自定义购买')
+                          } else if (item.buy_type == 4) {
+                            ToastUtil.showToast('小程序嵌入自定义购买')
+                          }
+                        } else {
+                          ToastUtil.showToast('无法购买')
                         }
                       })
                   }
@@ -1136,15 +1141,14 @@ export struct VHOrderDialog {
                   const username: string = this.name.length > 0 ? this.name : ''
                   const phone: string = this.phone.length > 0 ? this.phone : ''
                   const remark: string = this.remark.length > 0 ? this.remark : ''
-                  VHSaaSDK.getInstance().CreateGoodsOrder(this.webinars.webinar?.id.toString() as string,
-                    finalPrice.toString(),
-                    this.pay,
+                  VHSaaSDK.getInstance().CreateGoodsOrder(
+                    finalPrice.toString(), this.pay,
                     {
                       "goods_id": this.GoodsData.goods_id,
                       "quantity": this.value,
                       "buy_type": this.GoodsData.buy_type
                     },
-                    couponIds, username, phone, remark,
+                    couponIds, username, phone, remark, this.webinars.webinar?.id.toString() as string,
                     {
                       onSucceed: (data: VHCreateOrderInfo) => {
                         if (this.pay === 'WEIXIN') {

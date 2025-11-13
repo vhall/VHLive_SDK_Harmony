@@ -8,7 +8,8 @@
     "@vhall/vhallyun-framework": "^1.10.3",
     "@vhall/vhallyun-doc": "^1.10.8",
     "@vhall/vhallyun-ims": "^1.10.4",
-    "crypto-js": "^4.1.1"
+    "crypto-js": "^4.1.1",
+    "@vhall/vhall_live": "^1.0.1"
   },
   "devDependencies": {
     "@ohos/hypium": "1.0.21",

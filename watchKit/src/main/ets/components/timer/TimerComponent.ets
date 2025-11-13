@@ -278,7 +278,7 @@ export struct TimerComponent {
   subscribeResetTimer() {
     EmitterUtil.unsubscribe(VHRoomEventType.TIMER_RESET);
     EmitterUtil.subscribe(VHRoomEventType.TIMER_RESET, (msgData: EmitterMsgData) => {
-      console.log(`继续计时器，类型：${VHRoomEventType.TIMER_RESET}`);
+      console.log(`重置计时器，类型：${VHRoomEventType.TIMER_RESET}`);
       let timerInfo: TimerMsg = msgData.data as TimerMsg;
       this.initTimerMsg(timerInfo);
       this.resetTimer();
