@@ -288,7 +288,7 @@ export struct ReservationPage {
                   param['player_config'] = data;
                   param['webinar_id'] = this.webinar_id;
                   VHSaaSDK.getInstance()
-                    .doInitWatch(this.webinar_info?.webinar?.id.toString() as string, '', '', '', '', true, {
+                    .initWatch(this.webinar_info?.webinar?.id.toString() as string, '', '', '',  {
                       onSucceed: (data: VHWebinarData) => {
                         this.agreement = data.agreement as VHAgreement;
                         //判断是否开启

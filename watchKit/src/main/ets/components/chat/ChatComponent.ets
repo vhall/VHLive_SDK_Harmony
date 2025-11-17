@@ -195,7 +195,7 @@ export struct ChatComponent {
       if(this.webinars.webinar.type == 5){
         recordId = this.webinars.record?.record_id!;//回放获取当前回放id
       }
-      VHSaaSDK.getInstance().doInitWatch(this.webinars.webinar.id.toString(), recordId, '', '', '', true, {
+      VHSaaSDK.getInstance().initWatch(this.webinars.webinar.id.toString(), recordId, '', '',  {
         onSucceed: (data: VHWebinarData) => {
           this.agreement = data.agreement as VHAgreement;
         },

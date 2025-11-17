@@ -232,7 +232,7 @@ struct LiveEnterPage {
                           param['player_config'] = data;
                           param['webinar_id'] = this.webinar_id;
                           VHSaaSDK.getInstance()
-                            .doInitWatch(this.webinars.webinar.id.toString(), '', '', '', '', true, {
+                            .initWatch(this.webinars.webinar.id.toString(), '', '', '',  {
                               onSucceed: (data: VHWebinarData) => {
                                 this.agreement = data.agreement as VHAgreement;
                                 //this.functionConfig?.hard_login 是否开启了强制登录。

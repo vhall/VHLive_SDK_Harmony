@@ -221,7 +221,7 @@ struct WatchLivePage {
           onFailure: (errorCode: number, errorMsg: string) => {
             console.error('获取功能配置失败: ' + JSON.stringify(errorMsg));
           }
-        });
+     });
 
     let switchId: string = this.webinar_info?.switch_info?.switch_id.toString() as string;
     VHSaaSDK.getInstance().commonConfig(this.webinar_info?.webinar?.id.toString()!, switchId, {
@@ -500,7 +500,7 @@ struct WatchLivePage {
       if (this.webinar_info.webinar.type == 5) {
         recordId = this.webinar_info.record?.record_id!; //回放获取当前回放id
       }
-      VHSaaSDK.getInstance().doInitWatch(this.webinar_info.webinar.id.toString(), recordId, '', '', '', true, {
+      VHSaaSDK.getInstance().initWatch(this.webinar_info.webinar.id.toString(), recordId, '', '',  {
         onSucceed: (data: VHWebinarData) => {
           this.agreement = data.agreement as VHAgreement;
         },
