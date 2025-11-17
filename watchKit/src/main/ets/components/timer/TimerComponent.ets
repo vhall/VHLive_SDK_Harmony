@@ -1,4 +1,4 @@
-import { TimerMsg, TimerPauseMsg, VHRoomEventType } from '@vhall/vhall_live';
+import { VHTimerMsg, VHTimerPauseMsg, VHRoomEventType } from '@vhall/vhall_live';
 import { EmitterMsgData, EmitterUtil } from '../../util/EmitterUtil';
 /**
  * 计时器界面
@@ -19,9 +19,9 @@ export struct TimerComponent {
   @State isIncrementing: boolean = false;
   // 记录是否是暂停状态（用于区分初始状态和暂停状态）
   @State isPaused: boolean = false;
-  @Consume timerMsg: TimerMsg;
-  @State timerPauseMsg: TimerPauseMsg | null = null;
-  @State timerData: TimerMsg | null = null;
+  @Consume timerMsg: VHTimerMsg;
+  @State timerPauseMsg: VHTimerPauseMsg | null = null;
+  @State timerData: VHTimerMsg | null = null;
   @State minTens: number = 0;
   @State minUnits: number = 0;
   @State secTens: number = 0;
@@ -210,11 +210,11 @@ export struct TimerComponent {
     this.startTimer();
   }
 
-  initTimerMsg(timerInfo: TimerMsg) {
+  initTimerMsg(timerInfo: VHTimerMsg) {
     if (typeof timerInfo === 'string') {
-      this.timerData = JSON.parse(timerInfo) as TimerMsg;
+      this.timerData = JSON.parse(timerInfo) as VHTimerMsg;
     } else {
-      this.timerData = this.timerMsg as TimerMsg;
+      this.timerData = this.timerMsg as VHTimerMsg;
     }
     this.isTimeout = this.timerData.is_timeout;
     if (this.timerData.remain_time !== undefined) {
@@ -229,7 +229,7 @@ export struct TimerComponent {
       this.startTimer();
     }
     if (this.timerData.type === VHRoomEventType.TIMER_PAUSE) {
-      let timerInfo: TimerPauseMsg = this.timerData as TimerPauseMsg;
+      let timerInfo: VHTimerPauseMsg = this.timerData as VHTimerPauseMsg;
       this.initTimerPauseMsg(timerInfo);
       this.stopTimer();
     }
@@ -238,10 +238,10 @@ export struct TimerComponent {
     }
   }
 
-  initTimerPauseMsg(timerInfo: TimerPauseMsg) {
+  initTimerPauseMsg(timerInfo: VHTimerPauseMsg) {
     // 暂停功能
     if (typeof timerInfo === 'string') {
-      this.timerPauseMsg = JSON.parse(timerInfo) as TimerPauseMsg;
+      this.timerPauseMsg = JSON.parse(timerInfo) as VHTimerPauseMsg;
     } else {
       this.timerPauseMsg = timerInfo;
     }
@@ -259,7 +259,7 @@ export struct TimerComponent {
     EmitterUtil.unsubscribe(VHRoomEventType.TIMER_START);
     EmitterUtil.subscribe(VHRoomEventType.TIMER_START, (msgData: EmitterMsgData) => {
       console.log(`启动计时器，类型：${VHRoomEventType.TIMER_START}`);
-      let timerInfo: TimerMsg = msgData.data as TimerMsg;
+      let timerInfo: VHTimerMsg = msgData.data as VHTimerMsg;
       this.initTimerMsg(timerInfo);
       this.startTimer();
     });
@@ -269,7 +269,7 @@ export struct TimerComponent {
     EmitterUtil.unsubscribe(VHRoomEventType.TIMER_RESUME);
     EmitterUtil.subscribe(VHRoomEventType.TIMER_RESUME, (msgData: EmitterMsgData) => {
       console.log(`继续计时器，类型：${VHRoomEventType.TIMER_RESUME}`);
-      let timerInfo: TimerMsg = msgData.data as TimerMsg;
+      let timerInfo: VHTimerMsg = msgData.data as VHTimerMsg;
       this.initTimerMsg(timerInfo);
       this.resumeTimer();
     });
@@ -279,7 +279,7 @@ export struct TimerComponent {
     EmitterUtil.unsubscribe(VHRoomEventType.TIMER_RESET);
     EmitterUtil.subscribe(VHRoomEventType.TIMER_RESET, (msgData: EmitterMsgData) => {
       console.log(`重置计时器，类型：${VHRoomEventType.TIMER_RESET}`);
-      let timerInfo: TimerMsg = msgData.data as TimerMsg;
+      let timerInfo: VHTimerMsg = msgData.data as VHTimerMsg;
       this.initTimerMsg(timerInfo);
       this.resetTimer();
     });
@@ -289,7 +289,7 @@ export struct TimerComponent {
     EmitterUtil.unsubscribe(VHRoomEventType.TIMER_PAUSE);
     EmitterUtil.subscribe(VHRoomEventType.TIMER_PAUSE, (msgData: EmitterMsgData) => {
       console.log(`暂停计时器，类型：${VHRoomEventType.TIMER_PAUSE}`);
-      let timerInfo: TimerPauseMsg = msgData.data as TimerPauseMsg;
+      let timerInfo: VHTimerPauseMsg = msgData.data as VHTimerPauseMsg;
       this.initTimerPauseMsg(timerInfo);
       this.getTimeDigits(this.currentSeconds);
       this.stopTimer();
@@ -300,7 +300,7 @@ export struct TimerComponent {
     EmitterUtil.unsubscribe(VHRoomEventType.TIMER_END);
     EmitterUtil.subscribe(VHRoomEventType.TIMER_END, (msgData: EmitterMsgData) => {
       console.log(`结束计时器，类型：${VHRoomEventType.TIMER_END}`);
-      let timerInfo: TimerPauseMsg = msgData.data as TimerPauseMsg;
+      let timerInfo: VHTimerPauseMsg = msgData.data as VHTimerPauseMsg;
       this.initTimerPauseMsg(timerInfo);
       this.resetTimer();
     });

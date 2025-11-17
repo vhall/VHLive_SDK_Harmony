@@ -1,5 +1,5 @@
 import {
-  MenuInfoItem,
+  VHMenuInfoItem,
   VHCurrentInviterData,
   VHInviteCard,
   VHInviteTopList,
@@ -33,7 +33,7 @@ interface Offset {
 export struct VHCustomMenu{
   @Require webinars: VHWebinarData;
   @Require menu_id: string;
-  @State componentList: MenuInfoItem[] = [];
+  @State componentList: VHMenuInfoItem[] = [];
   @State subjectList: VHSubjectInfo[] = [];
   @State webinarList: VHWebinarDetail[] = [];
   @State topListDetails: VHInviteTopListDetails[] = [];
@@ -247,7 +247,7 @@ export struct VHCustomMenu{
 
   // 图文类型
   @Builder
-  ImageTextItem(menuInfo: MenuInfoItem) {
+  ImageTextItem(menuInfo: VHMenuInfoItem) {
     Column({ space: 0 }) {
       Scroll() {
         VHIntroductionView({ introduction: menuInfo.content })
@@ -262,7 +262,7 @@ export struct VHCustomMenu{
 
   // 二维码类型
   @Builder
-  QRcodeItem(menuInfo: MenuInfoItem) {
+  QRcodeItem(menuInfo: VHMenuInfoItem) {
     Column({ space: 8 }) {
       Image(menuInfo.imageSrc)
         .width(200)
@@ -412,7 +412,7 @@ export struct VHCustomMenu{
 
   // 文字链类型
   @Builder
-  TextLinkItem(menuInfo: MenuInfoItem) {
+  TextLinkItem(menuInfo: VHMenuInfoItem) {
     Column({ space: 8 }) {
       Text(menuInfo.text)
       .fontSize(16)
@@ -429,7 +429,7 @@ export struct VHCustomMenu{
 
   // 图片链类型
   @Builder
-  ImageLinkItem(menuInfo: MenuInfoItem) {
+  ImageLinkItem(menuInfo: VHMenuInfoItem) {
     Column({ space: 8 }) {
       Image(menuInfo.imageSrc)
         .width(300)
@@ -446,7 +446,7 @@ export struct VHCustomMenu{
 
   // 标题类型
   @Builder
-  TitleItem(menuInfo: MenuInfoItem) {
+  TitleItem(menuInfo: VHMenuInfoItem) {
     Column({ space: 8 }) {
       Text(menuInfo.title)
         .fontSize(16)
@@ -472,7 +472,7 @@ export struct VHCustomMenu{
 
   // 排行榜类型
   @Builder
-  RankingListItem(menuInfo: MenuInfoItem) {
+  RankingListItem(menuInfo: VHMenuInfoItem) {
     Column({space: 8}) {
       Row() {
         Text('排行榜')
@@ -597,7 +597,7 @@ export struct VHCustomMenu{
 
   // 外链嵌入类型
   @Builder
-  EmbedItem(menuInfo: MenuInfoItem) {
+  EmbedItem(menuInfo: VHMenuInfoItem) {
     Web({
       src: menuInfo.url,
       controller: this.controller
@@ -617,7 +617,7 @@ export struct VHCustomMenu{
   build() {
     Column() {
       List({ scroller: this.scroller }) {
-        ForEach(this.componentList, (menuInfo: MenuInfoItem, index: number) => {
+        ForEach(this.componentList, (menuInfo: VHMenuInfoItem, index: number) => {
           ListItem() {
             // 1:图文，2：二维码，3：直播，4：专题，5：文字链，6：图片链，7：标题，8：分割线， 9：排行榜,10: 外链嵌入
             if (menuInfo.component_id === 1) {

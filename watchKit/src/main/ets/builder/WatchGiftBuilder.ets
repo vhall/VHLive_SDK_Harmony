@@ -284,10 +284,10 @@ export struct WatchGiftView {
     Column({ space: 5 }){
       Row({ space: 5 }) {
         Image(item.winner_avatar.length > 0 ? item.winner_avatar : $r('app.media.icon_avatar')).width(20).height(20).borderRadius(10)
-        Text(item.winner_nickname).fontColor(Color.Red)
+        Text(FormatUtil.getTruncateText(item.winner_nickname,5)).fontColor(Color.Red)
         Blank()
         Text("获得").fontColor(Color.Red)
-        Text(`${FormatUtil.getTruncateText(item.award_name,5)}`).fontColor(Color.Red)
+        Text(FormatUtil.getTruncateText(item.award_name,5)).fontColor(Color.Red)
       }
       .width('80%')
       .alignItems(VerticalAlign.Center)
@@ -295,7 +295,6 @@ export struct WatchGiftView {
       .padding(10)
       .backgroundColor("#FFFFFF")
       .borderRadius(10)
-
       Divider()
         .color(Color.Gray)
     }
@@ -706,30 +705,37 @@ export struct WatchGiftView {
 
       if(this.showSetting){
         Column({space:10}){
-          Text('领奖信息')
-            .fontSize(24)
-            .fontWeight(FontWeight.Bold)
-            .fontColor('#FFFFFF')  // 改为白色文字
-            .backgroundColor('#E53935') // 主色作为背景
-            .padding({ left: 20, right: 20, top: 10, bottom: 10 })
-            .borderRadius(20)
-            .shadow({
-              radius: 8,          // 阴影扩散半径
-              color: '#B71C1C',   // 深红色阴影
-              offsetX: 3,         // 水平偏移量
-              offsetY: 3          // 垂直偏移量
-            })
-            .border({
-              width: 2,           // 边框粗细
-              color: '#FFCDD2'    // 浅红色边框
-            })
-            .rotate({ angle: -3 })// 文字倾斜角度
-            .textAlign(TextAlign.Center)
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
-            .zIndex(0)
-            .width('60%')
-            .textAlign(TextAlign.Center) // 文本内容在自身组件内居中
-            .textOverflow({ overflow: TextOverflow.Ellipsis })
+          Row(){
+            Text('领奖信息')
+              .fontSize(24)
+              .fontWeight(FontWeight.Bold)
+              .fontColor('#FFFFFF')  // 改为白色文字
+              .backgroundColor('#E53935') // 主色作为背景
+              .padding({ left: 20, right: 20, top: 10, bottom: 10 })
+              .borderRadius(20)
+              .shadow({
+                radius: 8,          // 阴影扩散半径
+                color: '#B71C1C',   // 深红色阴影
+                offsetX: 3,         // 水平偏移量
+                offsetY: 3          // 垂直偏移量
+              })
+              .border({
+                width: 2,           // 边框粗细
+                color: '#FFCDD2'    // 浅红色边框
+              })
+              .rotate({ angle: -3 })// 文字倾斜角度
+              .textAlign(TextAlign.Center)
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+              .zIndex(0)
+              .width('60%')
+              .textAlign(TextAlign.Center) // 文本内容在自身组件内居中
+              .textOverflow({ overflow: TextOverflow.Ellipsis })
+
+            Image($r('app.media.close')).width(24).height(24)
+              .onClick(()=>{
+                PromptActionClass.closeDialog();
+              })
+          }
 
           List({space:10}) {
             ForEach(

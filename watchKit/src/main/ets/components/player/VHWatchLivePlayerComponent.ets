@@ -96,6 +96,7 @@ export struct VHWatchLivePlayerComponent {
   playerState: VHPlayerState = VHPlayerState.VH_PLAYER_RELEASE;
   @State isStartPip:boolean = false;
 
+  @Prop @Watch('onHideState') hideState: number = 0;
   aboutToAppear(): void {
     this.livePlayer?.initWebinarInfo(this.webinars!);
     if (this.playerConfig?.basic?.picture_in_picture == 1) {
@@ -140,6 +141,20 @@ export struct VHWatchLivePlayerComponent {
     this.livePlayer?.startPlay(this.playerConfig?.default_definition!);
     this.currentPlayDefinition = this.playerConfig?.default_definition! as VHPlayDefinition;
     this.isPlayError = true;
+  }
+
+  onHideState(propName: string): void {
+    if(this.hideState == 1){
+      //隐藏
+      if(this.playerState == VHPlayerState.VH_PLAYER_PLAYING){
+        this.livePlayer?.pausePlay();
+      }
+    }else{
+      //显示
+      if(this.playerState == VHPlayerState.VH_PLAYER_PAUSE){
+        this.livePlayer?.resumePlay();
+      }
+    }
   }
 
   /**

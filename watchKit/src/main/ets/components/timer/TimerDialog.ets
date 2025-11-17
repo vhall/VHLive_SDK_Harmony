@@ -1,4 +1,4 @@
-import { TimerMsg, TimerPauseMsg, VHRoomEventType } from '@vhall/vhall_live';
+import { VHTimerMsg, TimerPauseMsg, VHRoomEventType } from '@vhall/vhall_live';
 import { EmitterMsgData, EmitterUtil } from '../../util/EmitterUtil';
 
 

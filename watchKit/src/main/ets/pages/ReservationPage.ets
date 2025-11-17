@@ -1,5 +1,5 @@
 import {
-  PrivacyAgreementInfo,
+  VHPrivacyAgreementInfo,
   VHAgreement,
   VHCommonConfig,
   VHConfigList,
@@ -43,7 +43,7 @@ class inputParam {
   holder: string = "";
   inputText: string = "";
   join?: (pwd: string) => void;
-  privacyAgreement: PrivacyAgreementInfo | null = null;
+  privacyAgreement: VHPrivacyAgreementInfo | null = null;
   verify: number = 0;
 }
 
@@ -128,7 +128,7 @@ export struct ReservationPage {
   @State webinarState: string = '预约'
   @State functionConfig: VHConfigList | null = null; //功能配置
   private isEnterRoom: boolean = false;
-  @State privacyAgreementInfo: PrivacyAgreementInfo | null = null;
+  @State privacyAgreementInfo: VHPrivacyAgreementInfo | null = null;
   @State agreement: VHAgreement = new VHAgreement();
   @State commonConfig: VHCommonConfig = new VHCommonConfig;
   aboutToAppear(): void {
@@ -372,8 +372,8 @@ export struct ReservationPage {
   getPrivacyAgreement(): void {
     VHSaaSDK.getInstance()
       .getPrivacyAgreement(this.webinar_info!.webinar!.id.toString(), "1", "0", "1", {
-        onSucceed: (data: PrivacyAgreementInfo) => {
-          this.privacyAgreementInfo = data as PrivacyAgreementInfo;
+        onSucceed: (data: VHPrivacyAgreementInfo) => {
+          this.privacyAgreementInfo = data as VHPrivacyAgreementInfo;
         },
         onFailure: (errorCode, errorMsg) => {
           console.log("获得隐私协议失败：", errorMsg)

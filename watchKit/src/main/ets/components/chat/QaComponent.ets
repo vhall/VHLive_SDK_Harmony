@@ -1,10 +1,10 @@
 import { ComponentContent, KeyboardAvoidMode } from '@kit.ArkUI';
 import {
-  LikeIcon,
+  VHLikeIcon,
   VHQuestionAnswerDeleteMsg,
   VHQuestionAnswerMsg,
   VHQuestionHistoryInfo,
-  RoomLikeInfo,
+  VHRoomLikeInfo,
   VHChatDisableAllMsg,
   VHContent,
   VHIMMessageModel,
@@ -15,7 +15,7 @@ import {
   VHSaaSDK,
   VHWebinarData,
   VHQuestionAnswerSetMsg,
-  RoomToolsStatusData,
+  VHRoomToolsStatusData,
   VHConfigList
 } from '@vhall/vhall_live';
 
@@ -37,7 +37,7 @@ export struct QaComponent {
   @Prop functionConfig: VHConfigList | null = null; //功能配置
   @Prop webinars: VHWebinarData | null = null;
   @State chatMessages: VHQuestionHistoryList | null = null;
-  @Prop room_tool: RoomToolsStatusData | null = null;
+  @Prop room_tool: VHRoomToolsStatusData | null = null;
   @Prop imBase: VHIMServer;
   @Prop isLive: boolean; //是否直播
   @State avatar: string | undefined = "";
@@ -57,7 +57,7 @@ export struct QaComponent {
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   // 正确创建CanvasRenderingContext2D对象
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
-  @State likeIcons: LikeIcon[] = [] // 存储所有点赞图标
+  @State likeIcons: VHLikeIcon[] = [] // 存储所有点赞图标
   private animationId: number = 0 // 动画ID
   // 问答历史记录 type为：question
   private qaQuestion: string = "question";
@@ -322,7 +322,7 @@ export struct QaComponent {
 
   getLikeCount() {
     VHSaaSDK.getInstance().getRoomLike(this.webinars?.interact?.room_id!, {
-      onSucceed: (data: RoomLikeInfo) => {
+      onSucceed: (data: VHRoomLikeInfo) => {
         this.likeCount = Number(data.total);
       },
       onFailure: (errorCode, errorMsg) => {
@@ -435,7 +435,7 @@ export struct QaComponent {
   }
 
   // 创建一个图标对象
-  createIcon(x: number, y: number, radius: number, emoji: string): LikeIcon {
+  createIcon(x: number, y: number, radius: number, emoji: string): VHLikeIcon {
     // 为图标生成随机属性
     const initialScale = 0.4 + Math.random() * 0.2 // 初始缩放比例0.4-0.6
     const maxScale = 1.0 + Math.random() * 0.3 // 最大缩放比例1.0-1.3
@@ -489,7 +489,7 @@ export struct QaComponent {
   // 更新所有图标状态
   updateIcons() {
     const currentTime = Date.now()
-    const newIcons: LikeIcon[] = []
+    const newIcons: VHLikeIcon[] = []
 
     for (let icon of this.likeIcons) {
       // 计算图标已存在的时间

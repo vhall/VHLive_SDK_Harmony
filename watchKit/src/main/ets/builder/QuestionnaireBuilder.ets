@@ -27,6 +27,8 @@ export struct QuestionnaireBuilder {
   controller: CustomDialogController
   private contentNode: ComponentContent<Object> | null = null;
   @Prop webinar: VHWebinarData = new VHWebinarData();
+  @Prop surId:number;
+
 
   aboutToAppear(): void {
     this.QuestionnaireListHttp(false)
@@ -59,9 +61,14 @@ export struct QuestionnaireBuilder {
         this.webinar?.switch_info?.switch_id.toString()!, {
           onSucceed: (data: VHHistoryQuestionnaireInfo) => {
             this.questionnaireList = data.list;
-            if (data.total > 0) {
-              this.SurveyQuestionnaire(this.questionnaireList[0].question_id.toString())
+            if(this.surId > 0){
+              this.SurveyQuestionnaire(this.surId.toString())
+            }else{
+              if (data.total > 0) {
+                this.SurveyQuestionnaire(this.questionnaireList[0].question_id.toString())
+              }
             }
+
             this.questionnaireAward = data.my_award_status;
             if (openDialog) {
               if (this.questionnaireList.length > 0) {
@@ -89,7 +96,7 @@ export struct QuestionnaireBuilder {
               this.questionnaireList.forEach((value: VHHistoryQuestionnaire, index: number,
                 array: VHHistoryQuestionnaire[]) => {
                 if (data.question_id == value.question_id && value.is_answered == "0") {
-                  this.SurveyQuestionnaire(this.questionnaireList[0].question_id.toString())
+                  this.SurveyQuestionnaire(value.question_id.toString())
                   this.openSurveyView();
                 }
               })

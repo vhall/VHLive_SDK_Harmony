@@ -1,21 +1,21 @@
-import { PrivacyAgreementInfo, StatementInfo, TextStatementInfo } from '@vhall/vhall_live';
+import { VHPrivacyAgreementInfo, VHStatementInfo, VHTextStatementInfo } from '@vhall/vhall_live';
 import { ComponentContent } from '@kit.ArkUI';
 import { PromptActionClass } from '../../util/PromptActionClass';
 import { WebViewPageBuilder, WebViewParams } from '../../pages/WebViewPage';
 
 @Component
 export struct VHLinkTextView {
-  @Require privacyAgreementInfo: PrivacyAgreementInfo | null = null;
+  @Require privacyAgreementInfo: VHPrivacyAgreementInfo | null = null;
   private contentNode: ComponentContent<Object> | null = null;
 
   // 拆分文本为普通文本和链接文本
-  splitText(): Array<TextStatementInfo> {
-    let result: Array<TextStatementInfo> = [];
+  splitText(): Array<VHTextStatementInfo> {
+    let result: Array<VHTextStatementInfo> = [];
     let remainingText = this.privacyAgreementInfo?.statement_content;
-    let links: StatementInfo[] = this.privacyAgreementInfo?.statement_info!;
+    let links: VHStatementInfo[] = this.privacyAgreementInfo?.statement_info!;
     // 按链接标题长度排序，避免短标题被长标题包含时的匹配问题
     const sortedLinks = links
-      ? [...links].sort((a: StatementInfo, b: StatementInfo) => {
+      ? [...links].sort((a: VHStatementInfo, b: VHStatementInfo) => {
       // 确保title存在且为字符串
       const titleA = a.title || '';
       const titleB = b.title || '';
@@ -27,14 +27,14 @@ export struct VHLinkTextView {
       if (index !== -1) {
         // 添加标题前的普通文本
         if (index > 0) {
-          let textStatementInfo: TextStatementInfo = new TextStatementInfo();
+          let textStatementInfo: VHTextStatementInfo = new VHTextStatementInfo();
           textStatementInfo.content = remainingText!.substring(0, index);
           textStatementInfo.isLink = false;
           textStatementInfo.link = '';
           result.push(textStatementInfo);
         }
         // 添加链接文本
-        let textStatementInfo: TextStatementInfo = new TextStatementInfo();
+        let textStatementInfo: VHTextStatementInfo = new VHTextStatementInfo();
         textStatementInfo.content = linkInfo.title;
         textStatementInfo.isLink = true;
         textStatementInfo.link = linkInfo.link;
@@ -45,7 +45,7 @@ export struct VHLinkTextView {
     });
     // 添加剩余的普通文本
     if (remainingText!.length > 0) {
-      let textStatementInfo: TextStatementInfo = new TextStatementInfo();
+      let textStatementInfo: VHTextStatementInfo = new VHTextStatementInfo();
       textStatementInfo.content = remainingText;
       textStatementInfo.isLink = false;
       textStatementInfo.link = '';
@@ -68,7 +68,7 @@ export struct VHLinkTextView {
     Column() {
       Row() {
         Flex({ direction: FlexDirection.Row, wrap: FlexWrap.Wrap }) {
-          ForEach(this.splitText(), (item: TextStatementInfo) => {
+          ForEach(this.splitText(), (item: VHTextStatementInfo) => {
             if (item.isLink) {
               Text(item.content)
                 .fontColor('#0066CC')

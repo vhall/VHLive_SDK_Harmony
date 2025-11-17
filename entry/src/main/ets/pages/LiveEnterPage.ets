@@ -325,9 +325,14 @@ struct LiveEnterPage {
                   // 获得活动id
                   let jsonUrlStr: string = result.originalValue as string;
                   if (jsonUrlStr != null) {
-                    if (jsonUrlStr.indexOf('watch/') != -1 && jsonUrlStr.indexOf('?') != -1) {
-                      this.input_id = jsonUrlStr.substring(jsonUrlStr.indexOf('watch/') + 6, jsonUrlStr.indexOf('?'));
-                    }
+                    // if (jsonUrlStr.indexOf('watch/') != -1 && jsonUrlStr.indexOf('?') != -1) {
+                    //   this.input_id = jsonUrlStr.substring(jsonUrlStr.indexOf('watch/') + 6, jsonUrlStr.indexOf('?'));
+                    // }
+                    // else if (jsonUrlStr.indexOf('watch/') != -1) {
+                    //   let start = jsonUrlStr.replace("");
+                    //   this.input_id = jsonUrlStr.toString().substring(start + 6,9);
+                    // }
+                    this.input_id =  jsonUrlStr.replace("https://live.vhall.com/v3/lives/watch/","");
                   }
                 })
                 .catch((error: BusinessError) => {

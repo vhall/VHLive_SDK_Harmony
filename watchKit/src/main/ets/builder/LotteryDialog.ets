@@ -2,9 +2,11 @@ import { ToastUtil } from "../action/ToastUtil";
 import {
   VHIMServer,
   VHLotteryCarryOut,
+  VHLotteryCondition,
   VHLotteryList,
   VHLotteryResultNoticeModel,
   VHSaaSDK,
+  VHWinnerInformation,
   VHWinnerInformationItem
 } from '@vhall/vhall_live';
 import { JSON } from '@kit.ArkTS';
@@ -245,12 +247,28 @@ export struct LotteryDetails {
               .fontWeight(500)
               .margin({ top: 26, bottom: 26 })
               .onClick(() => {
-                //打开列表
-                this.dialog.open()
-                this.closeDialog = false
-                this.LotteryStatusEnd = false
+                VHSaaSDK.getInstance().checkLotteryCondition(this.lotteryResultNotice?.lottery_id.toString()!,{
+                  onSucceed: (data: VHLotteryCondition) => {
+                    //参与签到的观众未签到 仅展示未签到处理
+                    if(data.condition == 3 && data.status == 1){
+                      this.closeDialog = false
+                      this.LotteryStatusEnd = false
+                      let msgData: EmitterMsgData;
+                      msgData = {
+                        type: MsgType.SIGN_CONDITION,
+                        data: data.sign_id
+                      } as EmitterMsgData;
+                      EmitterUtil.send(msgData);
+                    }else{
+                      //打开列表
+                      this.dialog.open()
+                      this.closeDialog = false
+                      this.LotteryStatusEnd = false
+                    }
+                  },
+                  onFailure: (errorCode: number, errorMsg: string) => {}
+                })
               })
-
             Text(this.lotteryResultNotice?.award_snapshoot?.award_name ||
             this.LotteryList[0].award_snapshoot.award_name)
               .fontColor(Color.White)

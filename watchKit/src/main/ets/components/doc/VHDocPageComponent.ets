@@ -42,21 +42,31 @@ export struct VHDocPageComponent {
    * @param type 文档类型
    */
   onDocAdd(id: string, type: VHDocType,createData: string) {
-
-    let isExistDoc: boolean = true;
-    for (let index = 0; index < this.documentViews.length; index++) {
-      const element = this.documentViews[index]
-      if (element == id) {
-        isExistDoc = true;
-        this.documentViews.splice(index, 1); // 删除当前索引的元素
-        break; // 跳出循环
+    if(this.webinars.webinar?.type == 5){
+      let add:boolean = true;
+      for (let index = 0; index < this.documentViews.length; index++) {
+        const element = this.documentViews[index]
+        //回放与直播逻辑存在差异。当同一个文档已经存在不需重复加入载入docview。
+        if (element == id) {
+          add = false;
+          break;
+        }
+      }
+      //为了确保文档每次都刷新添加，延迟展示。
+      if(add){
+        this.selectDocument = setTimeout(() => {
+          this.documentViews.push(id);
+        }, 1000);
       }
     }
-    //为了确保文档每次都刷新添加，延迟展示。
-    this.selectDocument = setTimeout(() => {
-      this.documentViews.push(id);
-      // this.showDoc = true;
-    }, 1000);
+    else{
+      //直播回调每次都加载最新的
+      this.documentViews = [];
+      //为了确保文档每次都刷新添加，延迟展示。
+      this.selectDocument = setTimeout(() => {
+        this.documentViews.push(id);
+      }, 1000);
+    }
   }
 
   /**

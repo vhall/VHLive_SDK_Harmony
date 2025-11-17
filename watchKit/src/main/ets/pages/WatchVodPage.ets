@@ -1,7 +1,7 @@
 import { display, promptAction, window } from '@kit.ArkUI';
 import {
   VHQuestionnairePushModel,
-  RoomToolsStatusData,
+  VHRoomToolsStatusData,
   VHCommonConfig,
   VHConfigList,
   VHDisableMsg,
@@ -82,7 +82,7 @@ struct WatchVodPage {
   @Provide questionnairePush: VHQuestionnairePushModel | null = null
   @Provide examData: VHExaminationModel | null = null
   @Prop imBase: VHIMServer;
-  @State room_tool: RoomToolsStatusData | null = null
+  @State room_tool: VHRoomToolsStatusData | null = null
   @State customMenuList: Array<VHMenus> = new Array();
   @State questionAnswerName: string = '';
   @Provide GoodsListData: VHGoodsListData[] = []
@@ -103,10 +103,14 @@ struct WatchVodPage {
   @State LotteryList: VHLotteryList[] = []
   @State LotteryStatus: boolean = false
   @State LotteryStatusEnd: boolean = false
-  @State roomStatus: RoomToolsStatusData = new RoomToolsStatusData();
+  @State roomStatus: VHRoomToolsStatusData = new VHRoomToolsStatusData();
   @State isShowQuestionAnswer: boolean = false;
   @State qaTabIndex: number = -1;
   @State commonConfig: VHCommonConfig = new VHCommonConfig;
+  @State pausePlay:boolean = false;
+  @State hideState: number = 0;
+  @State surId:number = 0;
+
   aboutToAppear() {
     this.getUIContext().setKeyboardAvoidMode(KeyboardAvoidMode.RESIZE)
     try {
@@ -164,6 +168,10 @@ struct WatchVodPage {
     VHSaaSDK.getInstance().commonConfig(this.webinar_info?.webinar?.id.toString()!, switchId, {
       onSucceed: (data: VHCommonConfig) => {
       this.commonConfig = data;
+        if(this.webinar_info?.webinar?.type != 5){
+          this.roomStatus = this.commonConfig?.room_tool!;
+        }
+
         data.menus?.forEach((value: VHMenus, index: number, array: VHMenus[]) => {
           if (value.name === '问答' && this.roomStatus.question_status === 1 && this.roomStatus.question_name!) {
             this.questionAnswerName = this.roomStatus.question_name!;
@@ -186,7 +194,7 @@ struct WatchVodPage {
             }
           }
         })
-        this.room_tool = data.room_tool as RoomToolsStatusData;
+        this.room_tool = data.room_tool as VHRoomToolsStatusData;
       },
       onFailure: (errorCode: number, errorMsg: string) => {
         ToastUtil.showToast(errorMsg);
@@ -239,7 +247,7 @@ struct WatchVodPage {
   })
   //问卷弹窗
   VHQuestionnaireDialog = new CustomDialogController({
-    builder: QuestionnaireBuilder({ webinar: this.webinar_info }),
+    builder: QuestionnaireBuilder({ webinar: this.webinar_info ,surId:this.surId}),
     customStyle: true,
     alignment: DialogAlignment.Bottom
   })
@@ -280,6 +288,7 @@ struct WatchVodPage {
               for (let index = 0; index < this.questionnaireList.length; index++) {
                 const value = this.questionnaireList[index];
                 if (value.is_answered == "0" && value.mandatory_filling === 1) {
+                  this.surId =value.question_id;
                   this.VHQuestionnaireDialog.open();
                   break; // 触发后立即终止循环
                 }
@@ -350,18 +359,23 @@ struct WatchVodPage {
   // }
 
   getRoomStatus() {
-    VHSaaSDK.getInstance()
-      .getRoomStatus(
-        this.webinar_info?.switch_info?.switch_id.toString()!, this.webinar_info?.interact?.room_id!, {
-        onSuccess: (data: RoomToolsStatusData) => {
-          this.roomStatus = data;
-          // 获取公共配置信息
-          this.getCommonConfig();
-        },
-        onFailure: (errorCode: number, errorMsg: string) => {
-          console.log(`获取观看端-获取房间状态失败： ${errorMsg}`);
-        }
-      })
+    //回复使用此逻辑，需要调用getRoomStatus
+    if(this.webinar_info?.webinar?.type == 5){
+      VHSaaSDK.getInstance().getRoomStatus(
+          this.webinar_info?.switch_info?.switch_id.toString()!, this.webinar_info?.interact?.room_id!, {
+          onSuccess: (data: VHRoomToolsStatusData) => {
+            this.roomStatus = data;
+            // 获取公共配置信息
+            this.getCommonConfig();
+          },
+          onFailure: (errorCode: number, errorMsg: string) => {
+            console.log(`获取观看端-获取房间状态失败： ${errorMsg}`);
+          }
+        })
+    }else{
+      //点播活动
+      this.getCommonConfig();
+    }
   }
 
   // 公告列表
@@ -569,7 +583,8 @@ struct WatchVodPage {
             webinars: this.webinar_info,
             player_config: this.player_config,
             isLandscapeStart: this.isLandscapeStart,
-            openSettingBtn: this.openSettingBtn
+            openSettingBtn: this.openSettingBtn,
+            hideState:this.hideState
           })
             .width('100%')
             .height('100%')
@@ -733,6 +748,12 @@ struct WatchVodPage {
     }
     .width('100%')
     .height('100%')
+    .onShown(()=>{
+        this.hideState = 0;
+    })
+    .onHidden(()=>{
+        this.hideState = 1;
+    })
     .hideToolBar(true)
     .hideTitleBar(true)
     .hideBackButton(true)

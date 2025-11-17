@@ -104,6 +104,8 @@ export struct VHWatchVodPlayerComponent {
   @State playerMaskHeight: number = 0;
   playerState: VHPlayerState = VHPlayerState.VH_PLAYER_RELEASE;
   @State isStartPip:boolean = false;
+
+  @Prop @Watch('onHideState') hideState: number = 0;
   aboutToAppear(): void {
     this.vodPlayer?.initWebinarInfo(this.webinars!);
     if (this.player_config?.basic?.picture_in_picture == 1) {
@@ -153,17 +155,31 @@ export struct VHWatchVodPlayerComponent {
     this.vodPlayer?.destroyPlayer();
   }
 
-  onPageShow(): void {
-    if(this.playerState == VHPlayerState.VH_PLAYER_PAUSE){
-      this.vodPlayer?.resumePlay();
+  onHideState(propName: string): void {
+    if(this.hideState == 1){
+      //隐藏
+        if(this.playerState == VHPlayerState.VH_PLAYER_PLAYING){
+          this.vodPlayer?.pausePlay();
+        }
+    }else{
+      //显示
+        if(this.playerState == VHPlayerState.VH_PLAYER_PAUSE){
+          this.vodPlayer?.resumePlay();
+        }
     }
   }
 
-  onPageHide(): void {
-    if(this.playerState == VHPlayerState.VH_PLAYER_PLAYING){
-      this.vodPlayer?.pausePlay();
-    }
-  }
+  // onPageShow(): void {
+  //   if(this.playerState == VHPlayerState.VH_PLAYER_PAUSE){
+  //     this.vodPlayer?.resumePlay();
+  //   }
+  // }
+  //
+  // onPageHide(): void {
+  //   if(this.playerState == VHPlayerState.VH_PLAYER_PLAYING){
+  //     this.vodPlayer?.pausePlay();
+  //   }
+  // }
 
   onPlayerViewInitCompleted() {
     if(this.webinars?.record?.preview_paas_record_id != undefined && this.webinars?.record?.preview_paas_record_id.length > 0){

@@ -1,5 +1,5 @@
 import {
-  PrivacyAgreementInfo,
+  VHPrivacyAgreementInfo,
   VHAgreementModel,
   VHIMMessageModel,
   VHIMServer,
@@ -55,7 +55,7 @@ export struct StartPage {
   @State webinarState: string = '直播中'
   private isEnterRoom: boolean = true;
   private contentNode: ComponentContent<Object> | null = null;
-  @State privacyAgreementInfo: PrivacyAgreementInfo | null = null;
+  @State privacyAgreementInfo: VHPrivacyAgreementInfo | null = null;
   @State agree: VHAgreementModel = new VHAgreementModel
 
   aboutToAppear(): void {

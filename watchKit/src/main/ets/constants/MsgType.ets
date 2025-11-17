@@ -18,4 +18,5 @@ export default class MsgType {
   static readonly VOD_MOMENT_TIME: string = "vod_moment";
   static readonly VOD_SUBTITLE_TIME: string = "subtitle_time";
   static readonly LOTTERY_MSG: string = "LotteryDialog_msg";
+  static readonly SIGN_CONDITION: string = "lottery_sign_condition";
 }

@@ -1,8 +1,8 @@
 import {
-  DataDownloadUpdateMsg,
-  FileConfigMsg,
-  FilesInfo,
-  FilesList,
+  VHDataDownloadUpdateMsg,
+  VHFileConfigMsg,
+  VHFilesInfo,
+  VHFilesList,
   VHRoomEventType,
   VHSaaSDK,
   VHSurveyAnswerReplayInfo,
@@ -19,10 +19,10 @@ import { VHQuestionnaireDialog } from './VHQuestionnaireDialog';
 export struct VHDownLoadFileComponent {
   @Require webinars: VHWebinarData;
   @Require menusId:string;
-  @State filesList: FilesInfo[] = [];
+  @State filesList: VHFilesInfo[] = [];
   @State answerReplayInfoList:  VHSurveyAnswerReplayInfo[] = []
   @State fileDownLoadUrl:string='';
-  @State config: FileConfigMsg = new FileConfigMsg;
+  @State config: VHFileConfigMsg = new VHFileConfigMsg;
   private scroller: Scroller = new Scroller();
   @State questionnaireUrl: string='';
   @State resultMessage: string = '';
@@ -77,10 +77,10 @@ export struct VHDownLoadFileComponent {
   subscribeDataDownloadUpdateMsg() {
     EmitterUtil.subscribe(VHRoomEventType.DATA_DOWNLOAD_UPDATE, (msgData: EmitterMsgData) => {
       console.log(`收到文件下载更新消息，类型：${VHRoomEventType.DATA_DOWNLOAD_UPDATE}`);
-      let updateMsg: DataDownloadUpdateMsg = msgData.data as DataDownloadUpdateMsg;
+      let updateMsg: VHDataDownloadUpdateMsg = msgData.data as VHDataDownloadUpdateMsg;
       if (updateMsg!) {
         if (typeof updateMsg === 'string') {
-          const parsedMessage: DataDownloadUpdateMsg = JSON.parse(updateMsg) as DataDownloadUpdateMsg;
+          const parsedMessage: VHDataDownloadUpdateMsg = JSON.parse(updateMsg) as VHDataDownloadUpdateMsg;
           this.menusId = parsedMessage.menu_id;
           this.config = parsedMessage.config;
           this.getFilesList();
@@ -96,10 +96,10 @@ export struct VHDownLoadFileComponent {
   getFilesList() {
     VHSaaSDK.getInstance()
       .getFilesList(this.webinars?.webinar!.id.toString(), this.menusId, {
-        onSucceed: (data: FilesList) => {
+        onSucceed: (data: VHFilesList) => {
           this.filesList = data?.list;
           if (data != null && data.config !== undefined) {
-            this.config = data.config as FileConfigMsg;
+            this.config = data.config as VHFileConfigMsg;
           }
         },
         onFailure: (errorCode, errorMsg) => {
@@ -148,7 +148,7 @@ export struct VHDownLoadFileComponent {
     Navigation(this.pageInfos) {
     Column() {
       List({ scroller: this.scroller }) {
-        ForEach(this.filesList, (item: FilesInfo, index) => {
+        ForEach(this.filesList, (item: VHFilesInfo, index) => {
           ListItem() {
             Row() {
               Text(ChatTools.getLimitString(item.file_name, 10)).fontSize(12)
@@ -178,7 +178,7 @@ export struct VHDownLoadFileComponent {
               .height(1)
               .color('#555555')
               .margin({ left: 8, right: 8 })
-        }, (item: FilesInfo) => item.file_id)
+        }, (item: VHFilesInfo) => item.file_id)
       }
       .width('100%')
       .height('100%')

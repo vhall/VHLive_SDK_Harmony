@@ -1,11 +1,11 @@
 import { ComponentContent, KeyboardAvoidMode } from '@kit.ArkUI';
 import {
-  GiftMessageInfo,
-  LikeIcon,
+  VHGiftMessageInfo,
+  VHLikeIcon,
   VHQuestionAnswer,
   VHQuestionnairePushModel,
-  RoomLikeInfo,
-  RoomToolsStatusData,
+  VHRoomLikeInfo,
+  VHRoomToolsStatusData,
   VHAgreement,
   VHChatDisableAllMsg,
   VHChatMessageList,
@@ -26,9 +26,9 @@ import {
   VHExamUserAnswerStatus,
   VHExamRank,
   VHExamReportList,
-  ChatDeleteMsg,
-  ChatMsgSetRecommend,
-  ChatMsgDelRecommend,
+  VHChatDeleteMsg,
+  VHChatMsgSetRecommend,
+  VHChatMsgDelRecommend,
   VHExamList,
 } from '@vhall/vhall_live';
 import { EmitterMsgData, EmitterUtil } from '../../util/EmitterUtil';
@@ -56,7 +56,7 @@ import { createExamReportView, reportParams } from '../../builder/ExamReportBuil
 @Component
 export struct ChatComponent {
   @Prop functionConfig: VHConfigList | null = null; //功能配置
-  @Prop room_tool: RoomToolsStatusData | null = null;
+  @Prop room_tool: VHRoomToolsStatusData | null = null;
   @Prop webinars: VHWebinarData | null = null;
   @Prop isLive: boolean; //是否直播
   @Prop welcomeContent: string;
@@ -83,7 +83,7 @@ export struct ChatComponent {
   private settings: RenderingContextSettings = new RenderingContextSettings(true)
   // 正确创建CanvasRenderingContext2D对象
   private context: CanvasRenderingContext2D = new CanvasRenderingContext2D(this.settings)
-  @State likeIcons: LikeIcon[] = [] // 存储所有点赞图标
+  @State likeIcons: VHLikeIcon[] = [] // 存储所有点赞图标
   @State welcomeLoginUser: string = '';
   @State agreement: VHAgreement = new VHAgreement();
   private animationId: number = 0 // 动画ID
@@ -263,10 +263,10 @@ export struct ChatComponent {
   subscribeChatDelete() {
     EmitterUtil.subscribe(VHRoomEventType.CHAT_DELETE, (msgData: EmitterMsgData) => {
       console.log(`收到删除消息，类型：${VHRoomEventType.CHAT_DELETE}`);
-      let chatDeleteMsg: ChatDeleteMsg = msgData.data as ChatDeleteMsg;
+      let chatDeleteMsg: VHChatDeleteMsg = msgData.data as VHChatDeleteMsg;
       if (chatDeleteMsg!) {
         if (typeof chatDeleteMsg === 'string') {
-          const parsedMessage: ChatDeleteMsg = JSON.parse(chatDeleteMsg) as ChatDeleteMsg;
+          const parsedMessage: VHChatDeleteMsg = JSON.parse(chatDeleteMsg) as VHChatDeleteMsg;
           this.handleChatDeleteMsg(parsedMessage);
         } else {
           this.handleChatDeleteMsg(chatDeleteMsg);
@@ -289,10 +289,10 @@ export struct ChatComponent {
   subscribeChatMsgSetRecommend() {
     EmitterUtil.subscribe(VHRoomEventType.CHAT_MSG_SET_RECOMMEND, (msgData: EmitterMsgData) => {
       console.log(`收到设置精选消息，类型：${VHRoomEventType.CHAT_MSG_SET_RECOMMEND}`);
-      let chatMsgSetRecommend: ChatMsgSetRecommend = msgData.data as ChatMsgSetRecommend;
+      let chatMsgSetRecommend: VHChatMsgSetRecommend = msgData.data as VHChatMsgSetRecommend;
       if (chatMsgSetRecommend!) {
         if (typeof chatMsgSetRecommend === 'string') {
-          const parsedMessage: ChatDeleteMsg = JSON.parse(chatMsgSetRecommend) as ChatDeleteMsg;
+          const parsedMessage: VHChatDeleteMsg = JSON.parse(chatMsgSetRecommend) as VHChatDeleteMsg;
         } else {
         }
       }
@@ -302,10 +302,10 @@ export struct ChatComponent {
   subscribeChatMsgDelRecommend() {
     EmitterUtil.subscribe(VHRoomEventType.CHAT_MSG_DEL_RECOMMEND, (msgData: EmitterMsgData) => {
       console.log(`收到取消精选消息，类型：${VHRoomEventType.CHAT_MSG_DEL_RECOMMEND}`);
-      let chatMsgDelRecommend: ChatMsgDelRecommend = msgData.data as ChatMsgDelRecommend;
+      let chatMsgDelRecommend: VHChatMsgDelRecommend = msgData.data as VHChatMsgDelRecommend;
       if (chatMsgDelRecommend!) {
         if (typeof chatMsgDelRecommend === 'string') {
-          const parsedMessage: ChatMsgDelRecommend = JSON.parse(chatMsgDelRecommend) as ChatMsgDelRecommend;
+          const parsedMessage: VHChatMsgDelRecommend = JSON.parse(chatMsgDelRecommend) as VHChatMsgDelRecommend;
         } else {
         }
       }
@@ -331,10 +331,10 @@ export struct ChatComponent {
   subscribeGiftMessage() {
     EmitterUtil.subscribe(VHRoomEventType.GIFT_MSG, (msgData: EmitterMsgData) => {
       console.log(`收到礼物类型消息，类型：${VHRoomEventType.GIFT_MSG}`);
-      let giftInfo: GiftMessageInfo = msgData.data as GiftMessageInfo;
+      let giftInfo: VHGiftMessageInfo = msgData.data as VHGiftMessageInfo;
       if (giftInfo!) {
         if (typeof giftInfo === 'string') {
-          const parsedMessage: GiftMessageInfo = JSON.parse(giftInfo) as GiftMessageInfo;
+          const parsedMessage: VHGiftMessageInfo = JSON.parse(giftInfo) as VHGiftMessageInfo;
           this.handleGiftMessage(parsedMessage);
         } else {
           this.handleGiftMessage(giftInfo);
@@ -446,7 +446,7 @@ export struct ChatComponent {
     }
   }
 
-  handleChatDeleteMsg(chatDeleteMsg: ChatDeleteMsg) {
+  handleChatDeleteMsg(chatDeleteMsg: VHChatDeleteMsg) {
     if (!chatDeleteMsg) {
       return;
     }
@@ -456,7 +456,7 @@ export struct ChatComponent {
     }
   }
 
-  handleGiftMessage(giftInfo: GiftMessageInfo) {
+  handleGiftMessage(giftInfo: VHGiftMessageInfo) {
     if (!giftInfo) {
       return;
     }
@@ -552,7 +552,7 @@ export struct ChatComponent {
 
   getLikeCount() {
     VHSaaSDK.getInstance().getRoomLike(this.webinars?.interact?.room_id!, {
-      onSucceed: (data: RoomLikeInfo) => {
+      onSucceed: (data: VHRoomLikeInfo) => {
         this.likeCount = Number(data.total) + Number(data.virtual_count) ;
       },
       onFailure: (errorCode, errorMsg) => {
@@ -586,7 +586,7 @@ export struct ChatComponent {
         if (obj['data']?.text_content.indexOf(VHRoomEventType.GIFT_MSG) > 0) {
           // 处理礼物数据
           if (obj['data']?.text_content.length > 0) {
-            let giftMsg = JSON.parse(obj['data']?.text_content as string) as GiftMessageInfo;
+            let giftMsg = JSON.parse(obj['data']?.text_content as string) as VHGiftMessageInfo;
             let msgContent =
               ChatTools.getLimitString(giftMsg.gift_user_nickname, 8) + " " + "送出" + " " + giftMsg.gift_name;
             let image_urls: string[] = [];
@@ -665,7 +665,7 @@ export struct ChatComponent {
   }
 
   // 创建一个图标对象
-  createIcon(x: number, y: number, radius: number, emoji: string): LikeIcon {
+  createIcon(x: number, y: number, radius: number, emoji: string): VHLikeIcon {
     // 为图标生成随机属性
     const initialScale = 0.4 + Math.random() * 0.2 // 初始缩放比例0.4-0.6
     const maxScale = 1.0 + Math.random() * 0.3 // 最大缩放比例1.0-1.3
@@ -719,7 +719,7 @@ export struct ChatComponent {
   // 更新所有图标状态
   updateIcons() {
     const currentTime = Date.now()
-    const newIcons: LikeIcon[] = []
+    const newIcons: VHLikeIcon[] = []
 
     for (let icon of this.likeIcons) {
       // 计算图标已存在的时间

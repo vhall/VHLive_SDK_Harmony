@@ -25,6 +25,7 @@ export struct GiftComponent {
   }
 
   getGiftList() {
+    this.giftList = [];
     VHSaaSDK.getInstance().getGiftList(this.webinars?.interact?.room_id!, {
       onSucceed: (data: VHGiftList) => {
         this.giftList = data?.list;

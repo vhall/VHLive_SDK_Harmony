@@ -135,7 +135,7 @@ export struct QuestionnairePage {
         }
         .width('100%')
         .height('100%')
-        .position({ x: 0, y: 50 })
+        // .position({ x: 0, y: 20 })
       }
       .onClick(() => {
         this.controller
@@ -145,10 +145,6 @@ export struct QuestionnairePage {
       .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
       .backgroundColor("#48000000")
     }
-    .expandSafeArea([SafeAreaType.SYSTEM], [SafeAreaEdge.TOP, SafeAreaEdge.BOTTOM])
-    .hideToolBar(true)
-    .hideTitleBar(true)
-    .hideBackButton(true)
     .id('QuestionnairePage')
     .onReady((context: NavDestinationContext) => {
       this.webObj.pageInfos = context.pathStack;

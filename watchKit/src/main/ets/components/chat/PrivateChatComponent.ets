@@ -1,7 +1,7 @@
 import { KeyboardAvoidMode } from '@kit.ArkUI';
 import {
-  LikeIcon,
-  RoomToolsStatusData,
+  VHLikeIcon,
+  VHRoomToolsStatusData,
   VHChatDisableAllMsg,
   VHConfigList,
   VHContent,
@@ -30,7 +30,7 @@ import ChatTools from '../../util/ChatTools';
 export struct PrivateChatComponent {
   @Prop functionConfig: VHConfigList | null = null; //功能配置
   @State chatDisable: boolean = false;
-  @Prop room_tool: RoomToolsStatusData | null = null;
+  @Prop room_tool: VHRoomToolsStatusData | null = null;
   @Prop webinars: VHWebinarData | null = null;
   @Prop imBase: VHIMServer;
   @State avatar: string | undefined = "";
@@ -55,7 +55,7 @@ export struct PrivateChatComponent {
   // 状态管理：控制预览显示/隐藏 + 当前预览的图片URL
   @State isPreviewShow: boolean = false;
   @State currentPreviewUrl: string = '';
-  @State likeIcons: LikeIcon[] = [] // 存储所有点赞图标
+  @State likeIcons: VHLikeIcon[] = [] // 存储所有点赞图标
   @StorageProp('privateChatMsg') privateChatMsg: string = '';
   aboutToAppear() {
     this.avatar = this.webinars?.join_info?.avatar;
@@ -204,7 +204,7 @@ export struct PrivateChatComponent {
   }
 
   // 创建一个图标对象
-  createIcon(x: number, y: number, radius: number, emoji: string): LikeIcon {
+  createIcon(x: number, y: number, radius: number, emoji: string): VHLikeIcon {
     // 为图标生成随机属性
     const initialScale = 0.4 + Math.random() * 0.2 // 初始缩放比例0.4-0.6
     const maxScale = 1.0 + Math.random() * 0.3 // 最大缩放比例1.0-1.3
@@ -258,7 +258,7 @@ export struct PrivateChatComponent {
   // 更新所有图标状态
   updateIcons() {
     const currentTime = Date.now()
-    const newIcons: LikeIcon[] = []
+    const newIcons: VHLikeIcon[] = []
 
     for (let icon of this.likeIcons) {
       // 计算图标已存在的时间

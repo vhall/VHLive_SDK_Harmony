@@ -132,39 +132,47 @@ export struct ExamBuilder {
                   .alignItems(HorizontalAlign.Start)
 
                   if (item.is_end == 0) {
-                    Text(item.status == 0 ? '填写' : '已填写')
-                      .fontSize(12)
-                      .fontColor(item.status == 0 ? '#ff0881d4' : '#666')
-                      .onClick(() => {
-                        this.VHExam(item.paper_id.toString(), item.answer_condition?.type.toString() as string)
-                        let param: object = new Object()
-                        param['ExamUrl'] = this.ExamUrl
-                        const pathInfo = new NavPathInfo(
-                          'ExamPage', // 页面名称
-                          param, // 传递给子页面的参数
-                          undefined,
-                          true
-                        );
-                        this.pageInfos.pushPath(pathInfo, true);
-                      })
+                    if(item.status == 1 && item.display_score == 0){
+                      Text("").fontSize(12)//隐藏答案
+                    }
+                    else{
+                      Text(item.status == 0 ? '填写' : '已填写')
+                        .fontSize(12)
+                        .fontColor(item.status == 0 ? '#ff0881d4' : '#666')
+                        .onClick(() => {
+                          this.VHExam(item.paper_id.toString(), item.answer_condition?.type.toString() as string)
+                          let param: object = new Object()
+                          param['ExamUrl'] = this.ExamUrl
+                          const pathInfo = new NavPathInfo(
+                            'ExamPage', // 页面名称
+                            param, // 传递给子页面的参数
+                            undefined,
+                            true
+                          );
+                          this.pageInfos.pushPath(pathInfo, true);
+                        })
+                    }
                   } else {
-                    Text('已结束')
-                      .fontSize(12)
-                      .fontColor('#666')
-                      .onClick(() => {
-                        this.VHExam(item.paper_id.toString(), item.answer_condition?.type.toString() as string)
-                        let param: object = new Object()
-                        param['ExamUrl'] = this.ExamUrl
-                        const pathInfo = new NavPathInfo(
-                          'ExamPage', // 页面名称
-                          param, // 传递给子页面的参数
-                          undefined,
-                          true
-                        );
-                        this.pageInfos.pushPath(pathInfo, true);
-                      })
+                    if(item.status == 1 && item.display_score == 0 ){
+                      Text("").fontSize(12)//隐藏答案
+                    }else{
+                      Text('已结束')
+                        .fontSize(12)
+                        .fontColor('#666')
+                        .onClick(() => {
+                          this.VHExam(item.paper_id.toString(), item.answer_condition?.type.toString() as string)
+                          let param: object = new Object()
+                          param['ExamUrl'] = this.ExamUrl
+                          const pathInfo = new NavPathInfo(
+                            'ExamPage', // 页面名称
+                            param, // 传递给子页面的参数
+                            undefined,
+                            true
+                          );
+                          this.pageInfos.pushPath(pathInfo, true);
+                        })
+                    }
                   }
-
                 }
                 .padding(14)
                 .backgroundColor(Color.White)
@@ -174,6 +182,9 @@ export struct ExamBuilder {
                 .alignItems(VerticalAlign.Top)
                 .margin({ bottom: 10 })
                 .onClick(()=>{
+                  if(item.status == 1 && item.display_score == 0){
+                    return;
+                  }
                   this.VHExam(item.paper_id.toString(), item.answer_condition?.type.toString() as string)
                   let param: object = new Object()
                   param['ExamUrl'] = this.ExamUrl

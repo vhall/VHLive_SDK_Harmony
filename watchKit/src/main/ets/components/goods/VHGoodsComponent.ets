@@ -240,23 +240,23 @@ export struct VHGoodsComponent {
                       .enabled(item.covered_status == 0 ? true : false)
                       .backgroundColor('#fb2626')
                       .onClick(() => {
-                        if (item.covered_status == 0) {
-                          //点击跳转支付页面,购买类型;1.平台购买 2.外链购买 3.自定义购买(APP嵌入) 4.自定义购买(小程序嵌入)
-                          if (item.buy_type == 1) {
-                            this.GoodsData = item
-                            this.OrderDialog.open()
-                          } else if (item.buy_type == 2) {
-                            const context: common.UIAbilityContext =
-                              this.getUIContext().getHostContext()! as common.UIAbilityContext;
-                            startBrowsableAbility(context);
-                          } else if (item.buy_type == 3) {
-                            ToastUtil.showToast('APP嵌入自定义购买')
-                          } else if (item.buy_type == 4) {
-                            ToastUtil.showToast('小程序嵌入自定义购买')
-                          }
-                        } else {
-                          ToastUtil.showToast('无法购买')
+                        // if (item.covered_status == 0) {
+                        //点击跳转支付页面,购买类型;1.平台购买 2.外链购买 3.自定义购买(APP嵌入) 4.自定义购买(小程序嵌入)
+                        if (item.buy_type == 1) {
+                          this.GoodsData = item
+                          this.OrderDialog.open()
+                        } else if (item.buy_type == 2) {
+                          const context: common.UIAbilityContext =
+                            this.getUIContext().getHostContext()! as common.UIAbilityContext;
+                          startBrowsableAbility(context);
+                        } else if (item.buy_type == 3) {
+                          ToastUtil.showToast('APP嵌入自定义购买')
+                        } else if (item.buy_type == 4) {
+                          ToastUtil.showToast('小程序嵌入自定义购买')
                         }
+                        // } else {
+                        //   ToastUtil.showToast('无法购买')
+                        // }
                       })
                   }
                   .width('100%')

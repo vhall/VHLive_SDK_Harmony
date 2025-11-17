@@ -2,9 +2,9 @@ import { ComponentContent, display, KeyboardAvoidMode, promptAction, window } fr
 import { JSON } from '@kit.ArkTS';
 import {
   VHGoodsInfo,
-  RoomToolsStatusData,
-  TimerMsg,
-  TimerPauseMsg,
+  VHRoomToolsStatusData,
+  VHTimerMsg,
+  VHTimerPauseMsg,
   VHAgreement,
   VHAnnouncementData,
   VHAnnouncementMessage,
@@ -66,7 +66,7 @@ import {
   VHWebinarSurvey,
   VHWebinarSurveyExtend,
   VHGoodsActivitySettings,
-  DataDownloadUpdateMsg
+  VHDataDownloadUpdateMsg
 } from '@vhall/vhall_live';
 import { VHWatchLivePlayerComponent } from '../components/player/VHWatchLivePlayerComponent';
 import { ChatComponent } from '../components/chat/ChatComponent';
@@ -97,6 +97,7 @@ import { EmitterMsgData, EmitterUtil } from '../util/EmitterUtil';
 import { VHIntroductionView } from '../components/introduction/VHIntroductionView';
 import { preferences } from '@kit.ArkData';
 import { PrivateChatComponent } from '../components/chat/PrivateChatComponent';
+import MsgType from '../constants/MsgType';
 
 const WINDOW_SYSTEM_BAR: Array<'status' | 'navigation'> = ['navigation', 'status'];
 const RECONNECT_TIMEOUT: number = 3000;
@@ -147,8 +148,8 @@ struct WatchLivePage {
   @State qaTabIndex: number = -1;
   @Provide lotteryPush: VHLotteryResultNoticeModel | null = null
   @Provide lotteryResultNotice: VHLotteryResultNoticeModel | null = null
-  @Provide timerMsg: TimerMsg | null = null
-  @State timerPauseMsg: TimerPauseMsg | null = null
+  @Provide timerMsg: VHTimerMsg | null = null
+  @State timerPauseMsg: VHTimerPauseMsg | null = null
   @State showTimerDialog: boolean = false;
   @State timerTotalSeconds: number = 0;
   @State isTimerShow: boolean = false;
@@ -173,7 +174,7 @@ struct WatchLivePage {
   // @State RedEnvelopeUserList: VHWinningUserListInfo[] = [];
   @State RedEnvelopeData: VHPwdRedEnvelopeData | null = null;
   @State functionConfig: VHConfigList | null = null; //功能配置
-  @State room_tool: RoomToolsStatusData | null = null
+  @State room_tool: VHRoomToolsStatusData | null = null
   @Provide agreement: VHAgreement = new VHAgreement();
   @State SignPush: VHSignData = new VHSignData();
   @State DoingSign: VHDoingSignInfo = new VHDoingSignInfo();
@@ -194,7 +195,7 @@ struct WatchLivePage {
   @Provide PushProductData: VHGoodsInfo[] = []
   @Provide ActivitySettings: VHGoodsActivitySettings = new VHGoodsActivitySettings()
   @State commonConfig: VHCommonConfig = new VHCommonConfig;
-
+  @State hideState: number = 0;
   aboutToAppear() {
     this.LotteryCarryOut = null;
     this.getUIContext().setKeyboardAvoidMode(KeyboardAvoidMode.RESIZE)
@@ -226,7 +227,7 @@ struct WatchLivePage {
     VHSaaSDK.getInstance().commonConfig(this.webinar_info?.webinar?.id.toString()!, switchId, {
       onSucceed: (data: VHCommonConfig) => {
         this.commonConfig = data;
-        this.room_tool = data.room_tool as RoomToolsStatusData;
+        this.room_tool = data.room_tool as VHRoomToolsStatusData;
         if (data.timer !== null && data.timer.duration !== undefined) {
           let timer = data.timer as VHTimer;
           this.initTimer(timer);
@@ -316,6 +317,12 @@ struct WatchLivePage {
       ToastUtil.showToast("您未进行签到已被踢出")
       this.pageInfos.pop()
     });
+
+    EmitterUtil.subscribe(MsgType.SIGN_CONDITION, (msgData: EmitterMsgData) => {
+      ToastUtil.showToast("很遗憾您未参与签到，不能进行抽奖")
+      let sign_id = msgData.data as string;
+
+    });
     this.PushProductData = this.dataPreferences.getSync('isPushProductData', '') as VHGoodsInfo[]
 
   }
@@ -337,7 +344,7 @@ struct WatchLivePage {
 
   initTimer(timer: VHTimer) {
     if (timer !== null) {
-      let timerMsg: TimerMsg = new TimerMsg();
+      let timerMsg: VHTimerMsg = new VHTimerMsg();
       timerMsg.duration = timer.duration;
       timerMsg.is_all_show = timer.is_all_show;
       timerMsg.is_timeout = timer.is_timeout;
@@ -1240,9 +1247,9 @@ struct WatchLivePage {
 
   private handleTimer(type: string, message: VHIMMessageModel) {
     if (typeof message.data === 'string') {
-      this.timerMsg = JSON.parse(message.data) as TimerMsg;
+      this.timerMsg = JSON.parse(message.data) as VHTimerMsg;
     } else {
-      this.timerMsg = message.data as TimerMsg;
+      this.timerMsg = message.data as VHTimerMsg;
     }
     this.showTimerDialog = this.timerMsg.is_all_show === '1' ? true : false;
     this.isTimerShow = this.showTimerDialog;
@@ -1252,9 +1259,9 @@ struct WatchLivePage {
 
   private handlePauseTimer(type: string, message: VHIMMessageModel) {
     if (typeof message.data === 'string') {
-      this.timerPauseMsg = JSON.parse(message.data) as TimerPauseMsg;
+      this.timerPauseMsg = JSON.parse(message.data) as VHTimerPauseMsg;
     } else {
-      this.timerPauseMsg = message.data as TimerPauseMsg;
+      this.timerPauseMsg = message.data as VHTimerPauseMsg;
     }
     EmitterMessage.handlePauseTimer(type, message);
   }
@@ -1523,7 +1530,8 @@ struct WatchLivePage {
               webinars: this.webinar_info,
               playerConfig: this.player_config,
               isLandscapeStart: this.isLandscapeStart,
-              openSettingBtn: this.openSettingBtn
+              openSettingBtn: this.openSettingBtn,
+              hideState:this.hideState
             })
               .width('100%')
               .height('100%')
@@ -1567,7 +1575,7 @@ struct WatchLivePage {
                           .commonConfig(this.webinar_info?.webinar?.id.toString()!,
                             this.webinar_info?.switch_info?.switch_id.toString()!, {
                               onSucceed: (data: VHCommonConfig) => {
-                                this.room_tool = data.room_tool as RoomToolsStatusData;
+                                this.room_tool = data.room_tool as VHRoomToolsStatusData;
                                 if (data.timer !== null && data.timer.duration !== undefined) {
                                   let timer = data.timer as VHTimer;
                                   this.initTimer(timer);
@@ -1604,6 +1612,13 @@ struct WatchLivePage {
                                           this.LotteryStatus = !this.LotteryStatus
                                         } else {
                                           this.LotteryStatusEnd = !this.LotteryStatusEnd
+                                          if(this.lotteryResultNotice == null){
+                                            this.lotteryResultNotice = new VHLotteryResultNoticeModel;
+                                            this.lotteryResultNotice.room_id = this.webinar_info?.interact?.room_id!;
+                                            this.lotteryResultNotice.lottery_id = this.LotteryList[0].id;
+                                            this.lotteryResultNotice.receive_award_way = this.LotteryList[0].receive_award_way;
+                                            this.lotteryResultNotice.lottery_type = this.LotteryList[0].lottery_type;
+                                          }
                                         }
                                         this.VHbol = !this.VHbol
                                       } else {
@@ -1692,22 +1707,12 @@ struct WatchLivePage {
                               .height('100%')
                           }
                         } else if (item.name === '简介' || item.type == 4) {
-
-                          // RichText(this.textData)
-                          //   .height('100%')
-                          //   .width('100%')
-
                           VHIntroductionView({ introduction: this.webinar_info?.webinar?.introduction }).height('100%')
                             .width('100%')
-
                         } else if (item.name === '文档' || item.type == 2) {
                           VHDocPageComponent({ webinars: this.webinar_info, playConfig: this.player_config })
                             .width('100%')
                             .height('100%')
-                          // .position({
-                          //   x: 0, y: this.agreement.is_open == 1 &&
-                          //     this.agreement.is_agree == 0 ? -90 : 0
-                          // })
                         } else if (item.name === '问答' || item.name === this.questionAnswerName) {
                           QaComponent({
                             webinars: this.webinar_info,
@@ -1802,10 +1807,12 @@ struct WatchLivePage {
     })
     .backgroundColor(Color.White)
     .onShown(() => {
+      this.hideState = 0;
       console.log(`取消长时任务`)
       BackgroundTaskManager.stopContinuousTask(this.getUIContext().getHostContext() as common.UIAbilityContext)
     })
     .onHidden(() => {
+      this.hideState = 1;
       console.log(`申请长时任务，避免退到后台导致消息服务中断`)
       BackgroundTaskManager.startContinuousTask(this.getUIContext().getHostContext() as common.UIAbilityContext);
     })

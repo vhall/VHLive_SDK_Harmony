@@ -1,11 +1,11 @@
 import {
-  ChatDeleteMsg,
-  ChatMsgDelRecommend,
-  ChatMsgSetRecommend,
-  DataDownloadUpdateMsg,
-  GiftMessageInfo,
-  TimerMsg,
-  TimerPauseMsg,
+  VHChatDeleteMsg,
+  VHChatMsgDelRecommend,
+  VHChatMsgSetRecommend,
+  VHDataDownloadUpdateMsg,
+  VHGiftMessageInfo,
+  VHTimerMsg,
+  VHTimerPauseMsg,
   VHAnnouncementData,
   VHBaseNumUpdate,
   VHChatDisableAllMsg,
@@ -25,7 +25,7 @@ import { EmitterMsgData, EmitterUtil } from '../../util/EmitterUtil';
 export class EmitterMessage {
   public static handleGiftMsg(message: VHIMMessageModel) {
     let msgData: EmitterMsgData;
-    let gifData = message.data as GiftMessageInfo
+    let gifData = message.data as VHGiftMessageInfo
     msgData = {
       type: VHRoomEventType.GIFT_MSG,
       data: gifData
@@ -102,7 +102,7 @@ export class EmitterMessage {
 
   public static handlePauseTimer(type: string, message: VHIMMessageModel) {
     let msgData: EmitterMsgData;
-    let pauseMsg = message.data as TimerPauseMsg;
+    let pauseMsg = message.data as VHTimerPauseMsg;
     msgData = {
       type: type,
       data: pauseMsg
@@ -112,7 +112,7 @@ export class EmitterMessage {
 
   public static handleDataDownloadUpdateMsg(message: VHIMMessageModel) {
     let msgData: EmitterMsgData;
-    let updateMsg = message.data as DataDownloadUpdateMsg;
+    let updateMsg = message.data as VHDataDownloadUpdateMsg;
     msgData = {
       type: VHRoomEventType.DATA_DOWNLOAD_UPDATE,
       data: updateMsg
@@ -123,7 +123,7 @@ export class EmitterMessage {
 
   public static handleChatMsgSetRecommend(message: VHIMMessageModel) {
     let msgData: EmitterMsgData;
-    let chatMsg = message.data as ChatMsgSetRecommend;
+    let chatMsg = message.data as VHChatMsgSetRecommend;
     msgData = {
       type: VHRoomEventType.CHAT_MSG_SET_RECOMMEND,
       data: chatMsg
@@ -133,7 +133,7 @@ export class EmitterMessage {
 
   public static handleChatMsgDelRecommend(message: VHIMMessageModel) {
     let msgData: EmitterMsgData;
-    let chatMsg = message.data as ChatMsgDelRecommend;
+    let chatMsg = message.data as VHChatMsgDelRecommend;
     msgData = {
       type: VHRoomEventType.CHAT_MSG_DEL_RECOMMEND,
       data: chatMsg
@@ -143,7 +143,7 @@ export class EmitterMessage {
 
   public static handleChatDelete(message: VHIMMessageModel) {
     let msgData: EmitterMsgData;
-    let chatMsg = message.data as ChatDeleteMsg;
+    let chatMsg = message.data as VHChatDeleteMsg;
     msgData = {
       type: VHRoomEventType.CHAT_DELETE,
       data: chatMsg
@@ -254,7 +254,7 @@ export class EmitterMessage {
 
   public static handleTimer(type: string, message: VHIMMessageModel) {
     let msgData: EmitterMsgData;
-    let timerMsg = message.data as TimerMsg;
+    let timerMsg = message.data as VHTimerMsg;
     msgData = {
       type: type,
       data: timerMsg
