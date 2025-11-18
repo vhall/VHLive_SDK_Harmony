@@ -30,7 +30,7 @@ export struct VHAnnouncementDialog {
 
   AnnouncementListHttp() {
     let total: number = 0
-    VHSaaSDK.getInstance().performAnnouncementIn(Announcement_Room_id, total, 0, {
+    VHSaaSDK.getInstance().getNoticeList(Announcement_Room_id, total, 0, {
       onSucceed: (data) => {
         total = data.total
         this.AnnouncementList = data.list

@@ -178,7 +178,7 @@ struct LiveEnterPage {
           return
         }
 
-        VHSaaSDK.getInstance().permissionsCheck("3", this.webinars?.webinar?.id.toString()!,
+        VHSaaSDK.getInstance().getConfigList("3", this.webinars?.webinar?.id.toString()!,
           this.webinars?.webinar?.userinfo.user_id.toString()!, {
             onSucceed: (configData: VHConfigList) => {
               this.functionConfig = configData;
@@ -232,7 +232,7 @@ struct LiveEnterPage {
                           param['player_config'] = data;
                           param['webinar_id'] = this.webinar_id;
                           VHSaaSDK.getInstance()
-                            .initWatch(this.webinars.webinar.id.toString(), '', '', '',  {
+                            .getWatchInfo(this.webinars.webinar.id.toString(), '', '', '',  {
                               onSucceed: (data: VHWebinarData) => {
                                 this.agreement = data.agreement as VHAgreement;
                                 //this.functionConfig?.hard_login 是否开启了强制登录。

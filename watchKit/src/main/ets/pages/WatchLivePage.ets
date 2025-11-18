@@ -172,7 +172,7 @@ struct WatchLivePage {
   @State customMenuList: Array<VHMenus> = new Array();
   @State RedEnvelope: VHRedEnvelopeInfo | null = null;
   // @State RedEnvelopeUserList: VHWinningUserListInfo[] = [];
-  @State RedEnvelopeData: VHPwdRedEnvelopeData | null = null;
+  @State RedEnvelopeData: VHPwdRedEnvelopeData  = new VHPwdRedEnvelopeData;
   @State functionConfig: VHConfigList | null = null; //功能配置
   @State room_tool: VHRoomToolsStatusData | null = null
   @Provide agreement: VHAgreement = new VHAgreement();
@@ -213,7 +213,7 @@ struct WatchLivePage {
     this.imBase.join(this.webinar_info!);
 
     VHSaaSDK.getInstance()
-      .permissionsCheck("3", this.webinar_info?.webinar?.id.toString()!,
+      .getConfigList("3", this.webinar_info?.webinar?.id.toString()!,
         this.webinar_info?.webinar?.userinfo.user_id.toString()!, {
           onSucceed: (data: VHConfigList) => {
             this.functionConfig = data;
@@ -227,6 +227,8 @@ struct WatchLivePage {
     VHSaaSDK.getInstance().commonConfig(this.webinar_info?.webinar?.id.toString()!, switchId, {
       onSucceed: (data: VHCommonConfig) => {
         this.commonConfig = data;
+        //当前是否有红包
+        this.initRedPacket(this.commonConfig.pwd_red_packet?.status!,this.commonConfig?.pwd_red_packet?.red_packet_uuid!);
         this.room_tool = data.room_tool as VHRoomToolsStatusData;
         if (data.timer !== null && data.timer.duration !== undefined) {
           let timer = data.timer as VHTimer;
@@ -325,6 +327,9 @@ struct WatchLivePage {
     });
     this.PushProductData = this.dataPreferences.getSync('isPushProductData', '') as VHGoodsInfo[]
 
+
+
+
   }
 
   aboutToDisappear(): void {
@@ -340,6 +345,29 @@ struct WatchLivePage {
     this.VHCardDialog.close()
     this.VHEnvelopeDialog.close()
     this.VHAnnouncementDialog.close()
+  }
+
+  private initRedPacket(status:number,uuid:string){
+    // 红包状态
+    if(status == 1){
+      VHSaaSDK.getInstance().getRedPacketStatus(this.webinar_info?.interact?.room_id!,uuid,{
+        onSucceed: (data: VHRedPacketStatus) => {
+          if(data.is_luck == 2){
+            this.RedEnvelope = new VHRedEnvelopeInfo;
+            this.RedEnvelope.status = 1;
+            this.RedEnvelope.red_code = data.red_code;
+            this.RedEnvelopeData.room_id = this.webinar_info?.interact?.room_id!;
+            this.RedEnvelopeData.red_packet_uuid = uuid;
+            if (this.RedEnvelope != null) {
+              this.VHEnvelopeDialog.open()
+            }
+          }
+        },
+        onFailure: (errorCode: number, errorMsg: string) => {
+
+        }
+      })
+    }
   }
 
   initTimer(timer: VHTimer) {
@@ -370,6 +398,7 @@ struct WatchLivePage {
               this.questionnaireList.forEach((value: VHHistoryQuestionnaire, index: number,
                 array: VHHistoryQuestionnaire[]) => {
                 if (data.question_id == value.question_id && value.is_answered == "0") {
+                  //获取url嵌入页面
                   this.SurveyQuestionnaireUrl =
                     VHSurveyInternal.getSurveyUrl(this.webinar_info!, data.question_id.toString());
                   this.openSurveyView();
@@ -500,7 +529,7 @@ struct WatchLivePage {
       if (this.webinar_info.webinar.type == 5) {
         recordId = this.webinar_info.record?.record_id!; //回放获取当前回放id
       }
-      VHSaaSDK.getInstance().initWatch(this.webinar_info.webinar.id.toString(), recordId, '', '',  {
+      VHSaaSDK.getInstance().getWatchInfo(this.webinar_info.webinar.id.toString(), recordId, '', '',  {
         onSucceed: (data: VHWebinarData) => {
           this.agreement = data.agreement as VHAgreement;
         },
@@ -514,7 +543,7 @@ struct WatchLivePage {
   // 公告列表
   AnnouncementListHttp() {
     let total: number = 0
-    VHSaaSDK.getInstance().performAnnouncementIn(this.webinar_info?.webinar?.id.toString()!, total, 0, {
+    VHSaaSDK.getInstance().getNoticeList(this.webinar_info?.webinar?.id.toString()!, total, 0, {
       onSucceed: (data) => {
         total = data.total
         console.log(`获取公告列表成功： ${JSON.stringify(data)}`);
@@ -591,7 +620,7 @@ struct WatchLivePage {
 
   //检查抽奖列表接口
   LotteryListHttp() {
-    VHSaaSDK.getInstance().performLotteryListIn('',
+    VHSaaSDK.getInstance().getHistoryLotteryList('',
       {
         onSucceed: (data: VHLotteryList[]) => {
           this.LotteryList = data as VHLotteryList[]
@@ -604,7 +633,7 @@ struct WatchLivePage {
 
   //检查抽奖进行中
   LotteryCarryOutHttp() {
-    VHSaaSDK.getInstance().performLotteryCarryOutIn(
+    VHSaaSDK.getInstance().lotteryCheck(
       {
         onSucceed: (data) => {
           this.LotteryCarryOut = data
@@ -619,7 +648,7 @@ struct WatchLivePage {
 
   //商品列表
   GoodsListHttp() {
-    VHSaaSDK.getInstance().performGoodsIn(0,
+    VHSaaSDK.getInstance().getGoodsList(0,
       {
         onSucceed: (data) => {
           // this.GoodsListData = data as VHGoodsListData[]
@@ -634,7 +663,7 @@ struct WatchLivePage {
   }
 
   GoodsInfoHttp(url: string) {
-    VHSaaSDK.getInstance().getGoodsInfo(url,
+    VHSaaSDK.getInstance().getGoodsInfoFromUrl(url,
       {
         onSuccess: (data) => {
           this.PushProductData = data
@@ -648,7 +677,7 @@ struct WatchLivePage {
   }
 
   GoodsActivitySettings() {
-    VHSaaSDK.getInstance().GoodsActivitySettings(this.webinar_info?.webinar!.id.toString() as string, '',
+    VHSaaSDK.getInstance().getGoodsOrderSetting(this.webinar_info?.webinar!.id.toString() as string, '',
       {
         onSucceed: (data) => {
           this.ActivitySettings = data as VHGoodsActivitySettings
@@ -662,7 +691,7 @@ struct WatchLivePage {
   //可用优惠卷列表
   getCouponsAvailableHttp() {
     VHSaaSDK.getInstance()
-      .getCouponsAvailable(this.webinar_info?.webinar?.id!, {
+      .getCouponAvailableList(this.webinar_info?.webinar?.id!, {
         onSucceed: (data) => {
           this.CouponsAvailable = data
           console.log(`获取可用优惠卷列表成功： ${JSON.stringify(data)}`)
@@ -677,7 +706,7 @@ struct WatchLivePage {
   //不可用优惠卷列表
   getCouponsNotAvailableHttp() {
     VHSaaSDK.getInstance()
-      .getCouponsNotAvailable(this.webinar_info?.webinar?.id!, {
+      .getCouponUnavailableList(this.webinar_info?.webinar?.id!, {
         onSucceed: (data) => {
           this.CouponsNotAvailable = data
           console.log(`获取不可用优惠卷列表成功： ${JSON.stringify(data)}`)
@@ -1003,27 +1032,7 @@ struct WatchLivePage {
     this.VHEnvelopeDialog.close()
     const RedEnvelope = message.data as VHPwdRedEnvelopeData;
     this.RedEnvelopeData = RedEnvelope
-    VHSaaSDK.getInstance().PasswordRedEnvelope(RedEnvelope.room_id, RedEnvelope.red_packet_uuid,
-      {
-        onSuccess: (data: VHRedEnvelopeInfo) => {
-          this.RedEnvelope = data as VHRedEnvelopeInfo
-          if (this.RedEnvelope != null) {
-            this.VHEnvelopeDialog.open()
-          }
-          console.log("接收口令红包成功", data)
-        },
-        onFailure: (errorCode: number, errorMsg: string) => {
-          console.log("接收口令红包失败", errorCode, errorMsg)
-          ToastUtil.showToast(errorMsg);
-        }
-      });
-
-    // 也可以用此接口获取红包状态。当关闭红包没有领取时，可以使用此接口重新获取红包状态
-    // VHSaaSDK.getInstance().getRedPacketStatus(this.webinar_info?.interact?.room_id!,RedEnvelope.red_packet_uuid,{
-    //   onSucceed: (data: VHRedPacketStatus) => {},
-    //   onFailure: (errorCode: number, errorMsg: string) => {}
-    // })
-    console.log("推送红包成功", message)
+    this.initRedPacket(1,RedEnvelope.red_packet_uuid);
   }
 
   private handleInteractRewardWinning(message: VHIMMessageModel) {

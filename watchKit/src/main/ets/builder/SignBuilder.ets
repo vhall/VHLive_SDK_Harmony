@@ -75,7 +75,7 @@ export struct VHSignDialog {
           Button('立即签到')
             .onClick(() => {
               clearInterval(this.timeId)
-              this.server?.performSignIn(this.SignPush.sign_id.toString(), this.SignPush.room_id, {
+              this.server?.signJoin(this.SignPush.sign_id.toString(), this.SignPush.room_id, {
                 onSuccess(data: string | object) {
                   ToastUtil.showToast(`${this.SignPush.sign_in_success_tips}`);
                 },
@@ -152,7 +152,7 @@ export struct VHSignDialog {
           Button('立即签到')
             .onClick(() => {
               clearInterval(this.timeId)
-              this.server?.performSignIn(this.signInfo.id, this.room_id as string, {
+              this.server?.signJoin(this.signInfo.id, this.room_id as string, {
                 onSuccess(data: string | object) {
                   ToastUtil.showToast(`${this.signInfo.sign_in_success_tips}`);
                 },

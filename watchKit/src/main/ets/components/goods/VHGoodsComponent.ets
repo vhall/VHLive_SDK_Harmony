@@ -53,7 +53,7 @@ export struct VHGoodsComponent {
 
   //商品列表
   GoodsListHttp() {
-    VHSaaSDK.getInstance().performGoodsIn(0,
+    VHSaaSDK.getInstance().getGoodsList(0,
       {
         onSucceed: (data) => {
           // this.GoodsListData = data as VHGoodsListData[]
@@ -69,7 +69,7 @@ export struct VHGoodsComponent {
 
   //用户获取活动商品设置
   GoodsActivitySettings() {
-    VHSaaSDK.getInstance().GoodsActivitySettings(this.webinars?.webinar!.id.toString(), '',
+    VHSaaSDK.getInstance().getGoodsOrderSetting(this.webinars?.webinar!.id.toString(), '',
       {
         onSucceed: (data) => {
           this.ActivitySettings = data as VHGoodsActivitySettings
@@ -482,7 +482,7 @@ export struct VHCouponsDialog {
   //可用优惠卷列表
   getCouponsAvailableHttp() {
     VHSaaSDK.getInstance()
-      .getCouponsAvailable(this.CouponsWebinarId, {
+      .getCouponAvailableList(this.CouponsWebinarId, {
         onSucceed: (data) => {
           this.CouponsAvailable = data as VHCouponInfo[]
           console.log(`获取可用优惠卷列表成功： ${JSON.stringify(data)}`)
@@ -497,7 +497,7 @@ export struct VHCouponsDialog {
   //不可用优惠卷列表
   getCouponsNotAvailableHttp() {
     VHSaaSDK.getInstance()
-      .getCouponsNotAvailable(this.CouponsWebinarId, {
+      .getCouponUnavailableList(this.CouponsWebinarId, {
         onSucceed: (data) => {
           this.CouponsNotAvailable = data as VHNotAvailableCouponInfo[]
           console.log(`获取不可用优惠卷列表成功： ${JSON.stringify(data)}`)
@@ -843,7 +843,7 @@ export struct VHOrderDialog {
   }
 
   GoodsActivitySettings() {
-    VHSaaSDK.getInstance().GoodsActivitySettings(this.webinars?.webinar!.id.toString(), '',
+    VHSaaSDK.getInstance().getGoodsOrderSetting(this.webinars?.webinar!.id.toString(), '',
       {
         onSucceed: (data) => {
           this.ActivitySettings = data as VHGoodsActivitySettings
@@ -877,7 +877,7 @@ export struct VHOrderDialog {
   // 获取可用优惠券列表（核心修复：遍历选中首张满足门槛的优惠券）
   getCouponsAvailableHttp() {
     VHSaaSDK.getInstance()
-      .getCouponsAvailable(this.CouponsWebinarId, {
+      .getCouponAvailableList(this.CouponsWebinarId, {
         onSucceed: (data) => {
           this.CouponsAvailable = data || [];
           this.Index = -1; // 重置为未选中状态
@@ -1141,7 +1141,7 @@ export struct VHOrderDialog {
                   const username: string = this.name.length > 0 ? this.name : ''
                   const phone: string = this.phone.length > 0 ? this.phone : ''
                   const remark: string = this.remark.length > 0 ? this.remark : ''
-                  VHSaaSDK.getInstance().CreateGoodsOrder(
+                  VHSaaSDK.getInstance().goodsOrderCreate(
                     finalPrice.toString(), this.pay,
                     {
                       "goods_id": this.GoodsData.goods_id,

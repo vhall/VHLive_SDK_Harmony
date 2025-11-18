@@ -22,7 +22,7 @@ export struct VHCardDialog {
 
   //推屏卡片详细信息
   CardInformationHttp(webinarId: string, Id: string) {
-    VHSaaSDK.getInstance().getCardInformation(webinarId, Id, {
+    VHSaaSDK.getInstance().getCardInfo(webinarId, Id, {
       onSucceed: (data: VHCardInfo) => {
         this.card = data
         console.log('卡片信息', data)

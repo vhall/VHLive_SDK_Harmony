@@ -275,7 +275,7 @@ export struct ReservationPage {
       params.join = (pwd: string) => {
         PromptActionClass.closeDialog(); // 调用关闭弹窗方法
         VHSaaSDK.getInstance()
-          .initWatch(this.webinar_info?.webinar?.id.toString()!,"", "", this.webinar_info?.join_info?.nickname!, {
+          .getWatchInfo(this.webinar_info?.webinar?.id.toString()!,"", "", this.webinar_info?.join_info?.nickname!, {
             onSucceed: (webinar: VHWebinarData) => {
               this.webinar_info = webinar;
               VHSaaSDK.getInstance().getPlayerConfig(this.webinar_info?.webinar?.id.toString()!, {
@@ -288,7 +288,7 @@ export struct ReservationPage {
                   param['player_config'] = data;
                   param['webinar_id'] = this.webinar_id;
                   VHSaaSDK.getInstance()
-                    .initWatch(this.webinar_info?.webinar?.id.toString() as string, '', '', '',  {
+                    .getWatchInfo(this.webinar_info?.webinar?.id.toString() as string, '', '', '',  {
                       onSucceed: (data: VHWebinarData) => {
                         this.agreement = data.agreement as VHAgreement;
                         //判断是否开启
@@ -472,7 +472,7 @@ export struct ReservationPage {
                   const webinarId = this.webinar_info?.webinar?.id.toString()!;
                   //1 密码进行验证。验证通过则预约成功
                   VHSaaSDK.getInstance()
-                    .checkWatchAuth(webinarId, "1", pwd, {
+                    .getWatchAuth(webinarId, "1", pwd, {
                       onSucceed: (data: VHWatchAuthInfo) => {
                         PromptActionClass.closeDialog();
                         //直播中
@@ -526,7 +526,7 @@ export struct ReservationPage {
               } else {
                 const webinarId = this.webinar_info?.webinar?.id.toString()!;
                 //1 密码，2 白名单 进行验证。验证通过则预约成功
-                VHSaaSDK.getInstance().checkWatchAuth(webinarId, "0", "", {
+                VHSaaSDK.getInstance().getWatchAuth(webinarId, "0", "", {
                   onSucceed: (data: VHWatchAuthInfo) => {
                     PromptActionClass.closeDialog();
                     //直播中

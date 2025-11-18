@@ -297,7 +297,7 @@ export struct QaComponent {
       new VHQuestionHistoryInfo(type, msg.nick_name, msg.content, msg.created_time,
         msg.avatar, answer, msg.id.toString());
     // 问答区的问题所有观众可见,且提问相同
-    if (this.questionPublicStatus === '1') {
+    if (this.questionPublicStatus === '1' || msg.answer?.is_open == 1) {
       this.historyData.push(qaInfo);
     } else if (msg.nick_name === this.webinars?.join_info?.nickname) {
       // 如问答区的问题所有观众不可见，只有自己可见
@@ -346,7 +346,7 @@ export struct QaComponent {
   }
 
   userLike() {
-    VHSaaSDK.getInstance().createUserLikeWithRoomId(this.webinars?.interact?.room_id!, this.clickLikeNumber.toString(), {
+    VHSaaSDK.getInstance().userLike(this.webinars?.interact?.room_id!, this.clickLikeNumber.toString(), {
       onSuccess: (data: string | object) => {
         console.log("增加点赞数：", this.clickLikeNumber);
       },
@@ -358,7 +358,7 @@ export struct QaComponent {
   }
 
   sendQuestion() {
-    VHSaaSDK.getInstance().sendQuestion(this.webinars?.interact?.room_id!, this.messageInput, {
+    VHSaaSDK.getInstance().submitQuestion(this.webinars?.interact?.room_id!, this.messageInput, {
       onSuccess: (data: string | object) => {
         console.log("消息发送成功");
         this.messageInput = '';
@@ -382,7 +382,12 @@ export struct QaComponent {
       array.forEach((obj: object) => {
         let qaInfo = obj as VHQuestionHistoryInfo;
         if (qaInfo != null) {
-          this.historyData.push(qaInfo);
+          if(this.questionPublicStatus == "1" || qaInfo.answer?.is_open == 1){
+            this.historyData.push(qaInfo);
+          }else if (qaInfo.nick_name === this.webinars?.join_info?.nickname) {
+            // 如问答区的问题所有观众不可见，只有自己可见
+            this.historyData.push(qaInfo);
+          }
         }
       });
       if (this.isRecommendShow === false) {

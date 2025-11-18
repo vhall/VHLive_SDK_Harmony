@@ -28,18 +28,16 @@ export struct VHPasswordEnvelopePage {
 
   //获取口令中奖者接口
   Envelope() {
-    VHSaaSDK.getInstance()
-      .RedEnvelopeUserList(this.RedEnvelopeData?.room_id!, this.RedEnvelopeData?.red_packet_uuid!,
-        {
-          onSuccess: (data: VHRedEnvelopeUserListInfo) => {
-            this.RedEnvelopeUserList = data.list as VHWinningUserListInfo[]
-            console.log("查看口令红包中奖成功", data)
-          },
-          onFailure: (errorCode: number, errorMsg: string) => {
-            console.log("查看口令红包中奖失败", errorCode, errorMsg)
-            ToastUtil.showToast("查看口令红包中奖失败:" + errorMsg);
-          }
-        });
+    VHSaaSDK.getInstance().getRedEnvelopeUserList(this.RedEnvelopeData?.room_id!, this.RedEnvelopeData?.red_packet_uuid!, {
+        onSuccess: (data: VHRedEnvelopeUserListInfo) => {
+          this.RedEnvelopeUserList = data.list as VHWinningUserListInfo[]
+          console.log("查看口令红包中奖成功", data)
+        },
+        onFailure: (errorCode: number, errorMsg: string) => {
+          console.log("查看口令红包中奖失败", errorCode, errorMsg)
+          ToastUtil.showToast("查看口令红包中奖失败:" + errorMsg);
+        }
+      });
   }
 
   //复制口令到剪切板
@@ -78,6 +76,16 @@ export struct VHPasswordEnvelopePage {
             .onClick(() => {
               this.OpenEnvelope = true
               this.CoverEnvelope = false
+              VHSaaSDK.getInstance().openPasswordRedEnvelope(this.RedEnvelopeData?.room_id!, this.RedEnvelopeData?.red_packet_uuid!,
+                {
+                  onSuccess: (data: VHRedEnvelopeInfo) => {
+                    console.log("接收口令红包成功", data)
+                  },
+                  onFailure: (errorCode: number, errorMsg: string) => {
+                    console.log("接收口令红包失败", errorCode, errorMsg)
+                    ToastUtil.showToast(errorMsg);
+                  }
+                });
             })
         }
         .width('100%')

@@ -195,7 +195,7 @@ export struct ChatComponent {
       if(this.webinars.webinar.type == 5){
         recordId = this.webinars.record?.record_id!;//回放获取当前回放id
       }
-      VHSaaSDK.getInstance().initWatch(this.webinars.webinar.id.toString(), recordId, '', '',  {
+      VHSaaSDK.getInstance().getWatchInfo(this.webinars.webinar.id.toString(), recordId, '', '',  {
         onSucceed: (data: VHWebinarData) => {
           this.agreement = data.agreement as VHAgreement;
         },
@@ -562,7 +562,7 @@ export struct ChatComponent {
   }
 
   userLike() {
-    VHSaaSDK.getInstance().createUserLikeWithRoomId(this.webinars?.interact?.room_id!, this.clickLikeNumber.toString(), {
+    VHSaaSDK.getInstance().userLike(this.webinars?.interact?.room_id!, this.clickLikeNumber.toString(), {
       onSuccess: (data: string | object) => {
         console.log("增加点赞数：", this.clickLikeNumber);
       },

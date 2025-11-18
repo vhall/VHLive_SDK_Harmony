@@ -38,7 +38,7 @@ export struct StartDialogPage {
 
   aboutToAppear(): void {
     VHSaaSDK.getInstance()
-      .permissionsCheck("3", this.webinar_info?.webinar?.id.toString()!,
+      .getConfigList("3", this.webinar_info?.webinar?.id.toString()!,
         this.webinar_info?.webinar?.userinfo.user_id.toString()!, {
           onSucceed: (data: VHConfigList) => {
             this.functionConfig = data;

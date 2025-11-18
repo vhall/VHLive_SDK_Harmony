@@ -129,7 +129,7 @@ struct WatchVodPage {
     // 获得房间状态及公共配置信息
     this.getRoomStatus();
     VHSaaSDK.getInstance()
-      .permissionsCheck("3", this.webinar_info?.webinar?.id.toString()!,
+      .getConfigList("3", this.webinar_info?.webinar?.id.toString()!,
         this.webinar_info?.webinar?.userinfo.user_id.toString()!, {
           onSucceed: (data: VHConfigList) => {
             this.functionConfig = data;
@@ -361,7 +361,7 @@ struct WatchVodPage {
   getRoomStatus() {
     //回复使用此逻辑，需要调用getRoomStatus
     if(this.webinar_info?.webinar?.type == 5){
-      VHSaaSDK.getInstance().getRoomStatus(
+      VHSaaSDK.getInstance().getRoomToolsState(
           this.webinar_info?.switch_info?.switch_id.toString()!, this.webinar_info?.interact?.room_id!, {
           onSuccess: (data: VHRoomToolsStatusData) => {
             this.roomStatus = data;
@@ -381,7 +381,7 @@ struct WatchVodPage {
   // 公告列表
   AnnouncementListHttp() {
     let total: number = 0
-    VHSaaSDK.getInstance().performAnnouncementIn(this.webinar_info?.webinar?.id.toString()!, total, 0, {
+    VHSaaSDK.getInstance().getNoticeList(this.webinar_info?.webinar?.id.toString()!, total, 0, {
       onSucceed: (data) => {
         total = data.total
         console.log(`获取公告列表成功： ${JSON.stringify(data)}`);

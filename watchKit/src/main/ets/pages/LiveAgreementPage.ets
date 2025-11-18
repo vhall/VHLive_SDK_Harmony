@@ -1,8 +1,8 @@
 import {
-  PrivacyAgreementInfo,
   VHIMMessageModel,
   VHIMServer,
   VHPlayerConfig,
+  VHPrivacyAgreementInfo,
   VHRoomEventType,
   VHSaaSDK,
   VHUserData,
@@ -32,7 +32,7 @@ class inputParam {
   holder: string = "";
   inputText: string = "";
   join?: (pwd: string) => void;
-  privacyAgreement: PrivacyAgreementInfo | null = null;
+  privacyAgreement: VHPrivacyAgreementInfo | null = null;
   verify: number = 0;
 }
 
@@ -114,7 +114,7 @@ export struct ReservationPage {
   @State reservationState: string = '立即预约'
   @State webinarState: string = '预约'
   private isEnterRoom: boolean = true;
-  @State privacyAgreementInfo: PrivacyAgreementInfo | null = null;
+  @State privacyAgreementInfo: VHPrivacyAgreementInfo | null = null;
 
   aboutToAppear(): void {
     this.pageList.push("简介");
@@ -218,8 +218,7 @@ export struct ReservationPage {
       params.holder = this.webinar_info?.webinar?.verify_tip!;
       params.join = (pwd: string) => {
         PromptActionClass.closeDialog(); // 调用关闭弹窗方法
-        VHSaaSDK.getInstance()
-          .initWatch(this.webinar_info?.webinar?.id.toString()!,"", "", this.webinar_info?.join_info?.nickname!, {
+        VHSaaSDK.getInstance().getWatchInfo(this.webinar_info?.webinar?.id.toString()!,"", "", this.webinar_info?.join_info?.nickname!, {
             onSucceed: (webinar: VHWebinarData) => {
               this.webinar_info = webinar;
               VHSaaSDK.getInstance().getPlayerConfig(this.webinar_info?.webinar?.id.toString()!, {
@@ -306,8 +305,8 @@ export struct ReservationPage {
   getPrivacyAgreement(): void {
     VHSaaSDK.getInstance()
       .getPrivacyAgreement(this.webinar_info!.webinar!.id.toString(), "1", "0", "1", {
-        onSucceed: (data: PrivacyAgreementInfo) => {
-          this.privacyAgreementInfo = data as PrivacyAgreementInfo;
+        onSucceed: (data: VHPrivacyAgreementInfo) => {
+          this.privacyAgreementInfo = data as VHPrivacyAgreementInfo;
         },
         onFailure: (errorCode, errorMsg) => {
           console.log("获得隐私协议失败：", errorMsg)
@@ -397,7 +396,7 @@ export struct ReservationPage {
                   const webinarId = this.webinar_info?.webinar?.id.toString()!;
                   //1 密码进行验证。验证通过则预约成功
                   VHSaaSDK.getInstance()
-                    .checkWatchAuth(webinarId, "1" , pwd, {
+                    .getWatchAuth(webinarId, "1" , pwd, {
                       onSucceed: (data: VHWatchAuthInfo) => {
                         PromptActionClass.closeDialog();
                         //直播中
@@ -451,7 +450,7 @@ export struct ReservationPage {
               } else {
                 const webinarId = this.webinar_info?.webinar?.id.toString()!;
                 //1 密码，2 白名单 进行验证。验证通过则预约成功
-                VHSaaSDK.getInstance().checkWatchAuth(webinarId, "0", "", {
+                VHSaaSDK.getInstance().getWatchAuth(webinarId, "0", "", {
                   onSucceed: (data: VHWatchAuthInfo) => {
                     PromptActionClass.closeDialog();
                     //直播中

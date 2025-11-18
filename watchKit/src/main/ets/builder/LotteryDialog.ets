@@ -37,7 +37,7 @@ export struct LotteryDialog {
   }
 
   Participation(lottery_id: string) {
-    VHSaaSDK.getInstance().performLotteryParticipationIn(this.room_id, lottery_id, {
+    VHSaaSDK.getInstance().lotteryJoin(this.room_id, lottery_id, {
       onSuccess: (data) => {
         ToastUtil.showToast('参与抽奖成功')
       },
@@ -168,7 +168,7 @@ export struct LotteryDetails {
   WinnerInformation() {
     if (this.lotteryResultNotice != null) {
       VHSaaSDK.getInstance()
-        .performListWinningIn(this.room_id,
+        .lotteryGetWinner(this.room_id,
           this.lotteryResultNotice!.lottery_id.toString(), {
             onSucceed: (data) => {
               this.WinnerList = data.list
@@ -181,7 +181,7 @@ export struct LotteryDetails {
           })
     } else {
       VHSaaSDK.getInstance()
-        .performListWinningIn(this.room_id,
+        .lotteryGetWinner(this.room_id,
           this.LotteryList[0].id.toString(), {
             onSucceed: (data) => {
               this.WinnerList = data.list
@@ -367,7 +367,7 @@ export struct LotteryListDialog {
   WinnerInformation() {
     if (this.lotteryResultNotice != null) {
       VHSaaSDK.getInstance()
-        .performListWinningIn(this.room_id, this.lotteryResultNotice!.lottery_id.toString(), {
+        .lotteryGetWinner(this.room_id, this.lotteryResultNotice!.lottery_id.toString(), {
           onSucceed: (data) => {
             this.WinnerList = data.list as VHWinnerInformationItem[]
             console.log(`获取中奖用户列表成功：${JSON.stringify(data)}`)
@@ -378,7 +378,7 @@ export struct LotteryListDialog {
         })
     } else {
       VHSaaSDK.getInstance()
-        .performListWinningIn(this.room_id, this.LotteryList[0].id.toString(), {
+        .lotteryGetWinner(this.room_id, this.LotteryList[0].id.toString(), {
           onSucceed: (data) => {
             this.WinnerList = data.list as VHWinnerInformationItem[]
             console.log(`获取中奖用户列表成功：${JSON.stringify(data)}`)
@@ -391,8 +391,7 @@ export struct LotteryListDialog {
   }
 
   performWinnerInformationIn() {
-    VHSaaSDK.getInstance()
-      .performWinnerInformationIn(this.lotteryResultNotice!.room_id, this.lotteryResultNotice!.lottery_id.toString(),
+    VHSaaSDK.getInstance().lotteryCommit(this.lotteryResultNotice!.room_id, this.lotteryResultNotice!.lottery_id.toString(),
         this.name, this.phone,
         {
           onSuccess: (data) => {
