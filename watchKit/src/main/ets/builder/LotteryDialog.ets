@@ -26,6 +26,8 @@ export struct LotteryDialog {
   @State type: string = 'lottery_result_notice'
   @Consume lotteryPush: VHLotteryResultNoticeModel | null
   @Prop LotteryCarryOut: VHLotteryCarryOut = new VHLotteryCarryOut();
+
+
   @Link LotteryStatus: boolean
   @Prop room_id: string = ''
 

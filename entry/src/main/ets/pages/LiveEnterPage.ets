@@ -56,7 +56,7 @@ struct LiveEnterPage {
   private is_auth_check: boolean = false;
   pageInfos: NavPathStack = new NavPathStack() // 导航
   private contentNode: ComponentContent<Object> | null = null;
-  @Provide screenPoster: VHScreenPoster | null = null
+  @Provide screenPoster: VHScreenPoster |null = null;
   private functionConfig: VHConfigList | null = null; //功能配置
 
   aboutToAppear(): void {
@@ -242,7 +242,7 @@ struct LiveEnterPage {
                                   this.pageInfos.pushPath({ name: 'WatchLivePage', param: param }, true);
                                 }
                               },
-                              onFailure: (errorCode, errorMsg) => {
+                              onFailure: (errorCode: number, errorMsg: string) => {
                                 this.pageInfos.pushPath({ name: 'WatchLivePage', param: param }, true);
                                 ToastUtil.showToast(errorMsg);
                               }
@@ -297,10 +297,10 @@ struct LiveEnterPage {
             .height('30%')
           Button('登出').onClick(() => {
             VHSaaSDK.getInstance().logout({
-              onSuccess: (data) => {
+              onSuccess: (data:string|object) => {
                 this.pageInfos.pop();
               },
-              onFailure: (errorCode, errorMsg) => {
+              onFailure: (errorCode: number, errorMsg: string) => {
                 ToastUtil.showToast(errorMsg);
               }
             })

@@ -36,7 +36,7 @@ class HarmonyObj {
 }
 
 /**
- * 问答弹窗
+ * 问卷弹窗
  */
 @CustomDialog
 export struct VHQuestionnaireDialog {
