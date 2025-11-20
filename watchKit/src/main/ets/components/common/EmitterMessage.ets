@@ -11,7 +11,7 @@ import {
   VHChatDisableAllMsg,
   VHIMMessageModel,
   VHMsgData,
-  VHQuestionAnswer,
+  VHQuestionAnswerSwitchMsg,
   VHQuestionAnswerDeleteMsg,
   VHQuestionAnswerLikeMsg,
   VHQuestionAnswerMsg,
@@ -265,7 +265,7 @@ export class EmitterMessage {
   public static handleQuestionAnswerOpenClose(type: string, message: VHIMMessageModel) {
     let msgData: EmitterMsgData;
     // 问答开启及关闭消息
-    let questionAnswerData: VHQuestionAnswer = message.data as VHQuestionAnswer;
+    let questionAnswerData: VHQuestionAnswerSwitchMsg = message.data as VHQuestionAnswerSwitchMsg;
     msgData = {
       type: type,
       data: questionAnswerData

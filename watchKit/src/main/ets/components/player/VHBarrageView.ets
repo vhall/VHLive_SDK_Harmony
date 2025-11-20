@@ -36,12 +36,12 @@ export struct VHBarrageViews {
 
   private handleTextMessage(messageModel?: VHIMMessageModel){
     if(messageModel && this.enable){
-      let imMsg:VHContent= messageModel as VHContent;
-      imMsg.nickname= messageModel.nick_name;
-      imMsg.data = messageModel.data as VHMsgData;
+      let imMsg:VHMsgData= messageModel.data as VHMsgData;
+      // imMsg.nickname= messageModel.nick_name;
+      // imMsg.data = messageModel.data as VHMsgData;
       const barrageItem = new BarrageItem();
       barrageItem.id = "123";
-      barrageItem.text = EmojiTool.convertEmojiTags(imMsg.data.text_content)
+      barrageItem.text = EmojiTool.convertEmojiTags(imMsg.text_content)
       barrageItem.isSelf = false;
       barrageItem.speed = 1;
       barrageItem.textSize = 14;

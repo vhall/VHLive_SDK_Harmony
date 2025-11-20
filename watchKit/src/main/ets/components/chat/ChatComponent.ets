@@ -2,7 +2,7 @@ import { ComponentContent, KeyboardAvoidMode } from '@kit.ArkUI';
 import {
   VHGiftMessageInfo,
   VHLikeIcon,
-  VHQuestionAnswer,
+  VHQuestionAnswerSwitchMsg,
   VHQuestionnairePushModel,
   VHRoomLikeInfo,
   VHRoomToolsStatusData,
@@ -373,10 +373,10 @@ export struct ChatComponent {
   subscribeQuestionAnswerMessage() {
     EmitterUtil.subscribe(VHRoomEventType.QUESTION_ANSWER_OPEN, (msgData: EmitterMsgData) => {
       console.log(`收到问答开启信息，类型：${VHRoomEventType.QUESTION_ANSWER_OPEN}`);
-      let questionAnswerInfo: VHQuestionAnswer = msgData.data as VHQuestionAnswer;
+      let questionAnswerInfo: VHQuestionAnswerSwitchMsg = msgData.data as VHQuestionAnswerSwitchMsg;
       if (questionAnswerInfo!) {
         if (typeof questionAnswerInfo === 'string') {
-          const parsedMessage: VHQuestionAnswer = JSON.parse(questionAnswerInfo) as VHQuestionAnswer;
+          const parsedMessage: VHQuestionAnswerSwitchMsg = JSON.parse(questionAnswerInfo) as VHQuestionAnswerSwitchMsg;
           this.handleQuestionAnswerMessage(parsedMessage);
         } else {
           this.handleQuestionAnswerMessage(questionAnswerInfo);
@@ -390,10 +390,10 @@ export struct ChatComponent {
 
     EmitterUtil.subscribe(VHRoomEventType.QUESTION_ANSWER_CLOSE, (msgData: EmitterMsgData) => {
       console.log(`收到问答关闭信息，类型：${VHRoomEventType.QUESTION_ANSWER_CLOSE}`);
-      let questionAnswerInfo: VHQuestionAnswer = msgData.data as VHQuestionAnswer;
+      let questionAnswerInfo: VHQuestionAnswerSwitchMsg = msgData.data as VHQuestionAnswerSwitchMsg;
       if (questionAnswerInfo!) {
         if (typeof questionAnswerInfo === 'string') {
-          const parsedMessage: VHQuestionAnswer = JSON.parse(questionAnswerInfo) as VHQuestionAnswer;
+          const parsedMessage: VHQuestionAnswerSwitchMsg = JSON.parse(questionAnswerInfo) as VHQuestionAnswerSwitchMsg;
           this.handleQuestionAnswerMessage(parsedMessage);
         } else {
           this.handleQuestionAnswerMessage(questionAnswerInfo);
@@ -470,7 +470,7 @@ export struct ChatComponent {
     this.historyData.push(imMsg);
   }
 
-  handleQuestionAnswerMessage(questionAnswerInfo: VHQuestionAnswer) {
+  handleQuestionAnswerMessage(questionAnswerInfo: VHQuestionAnswerSwitchMsg) {
     if (!questionAnswerInfo) {
       return;
     }

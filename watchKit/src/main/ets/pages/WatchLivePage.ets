@@ -44,9 +44,9 @@ import {
   VHNotAvailableCouponInfo,
   VHPlayerConfig,
   VHPushGoodsChangeData,
-  VHPushScreenCard,
+  VHPushScreenCardMsg,
   VHPwdRedEnvelopeData,
-  VHQuestionAnswer,
+  VHQuestionAnswerSwitchMsg,
   VHQuestionAnswerSetMsg,
   VHQuestionnairePushModel,
   VHRedEnvelopeInfo,
@@ -66,7 +66,9 @@ import {
   VHWebinarSurvey,
   VHWebinarSurveyExtend,
   VHGoodsActivitySettings,
-  VHDataDownloadUpdateMsg
+  VHDataDownloadUpdateMsg,
+  VHGoodsInfoCallback,
+  VHGoodsListCallback
 } from '@vhall/vhall_live';
 import { VHWatchLivePlayerComponent } from '../components/player/VHWatchLivePlayerComponent';
 import { ChatComponent } from '../components/chat/ChatComponent';
@@ -162,7 +164,7 @@ struct WatchLivePage {
   @Provide ExamList: VHExamList[] = []
   @Provide CardList: VHCardInfo[] = []
 
-  @Provide card: VHPushScreenCard | null = null;
+  @Provide card: VHPushScreenCardMsg | null = null;
   @Provide GoodsList: VHPushGoodsChangeData | null = null
   @Provide GoodsListData: VHGoodsListData[] = []
   @Provide CouponsAvailable: VHCouponInfo[] = []
@@ -326,10 +328,6 @@ struct WatchLivePage {
 
     });
     this.PushProductData = this.dataPreferences.getSync('isPushProductData', '') as VHGoodsInfo[]
-
-
-
-
   }
 
   aboutToDisappear(): void {
@@ -650,7 +648,7 @@ struct WatchLivePage {
   GoodsListHttp() {
     VHSaaSDK.getInstance().getGoodsList(0,
       {
-        onSucceed: (data) => {
+        onSucceed: (data:VHGoodsListData[]) => {
           // this.GoodsListData = data as VHGoodsListData[]
           this.GoodsListData = data.filter(item => item.status === 1);
           console.log(`获取商品列表成功： ${JSON.stringify(this.GoodsListData)}`)
@@ -665,7 +663,7 @@ struct WatchLivePage {
   GoodsInfoHttp(url: string) {
     VHSaaSDK.getInstance().getGoodsInfoFromUrl(url,
       {
-        onSuccess: (data) => {
+        onSuccess: (data:VHGoodsInfo[]) => {
           this.PushProductData = data
           this.dataPreferences?.putSync('isPushProductData', this.PushProductData);
           this.dataPreferences?.flushSync();
@@ -679,7 +677,7 @@ struct WatchLivePage {
   GoodsActivitySettings() {
     VHSaaSDK.getInstance().getGoodsOrderSetting(this.webinar_info?.webinar!.id.toString() as string, '',
       {
-        onSucceed: (data) => {
+        onSucceed: (data:VHGoodsActivitySettings) => {
           this.ActivitySettings = data as VHGoodsActivitySettings
         },
         onFailure: (errorCode, errorMsg) => {
@@ -692,7 +690,7 @@ struct WatchLivePage {
   getCouponsAvailableHttp() {
     VHSaaSDK.getInstance()
       .getCouponAvailableList(this.webinar_info?.webinar?.id!, {
-        onSucceed: (data) => {
+        onSucceed: (data:VHCouponInfo[]) => {
           this.CouponsAvailable = data
           console.log(`获取可用优惠卷列表成功： ${JSON.stringify(data)}`)
         },
@@ -707,7 +705,7 @@ struct WatchLivePage {
   getCouponsNotAvailableHttp() {
     VHSaaSDK.getInstance()
       .getCouponUnavailableList(this.webinar_info?.webinar?.id!, {
-        onSucceed: (data) => {
+        onSucceed: (data: VHNotAvailableCouponInfo[] ) => {
           this.CouponsNotAvailable = data
           console.log(`获取不可用优惠卷列表成功： ${JSON.stringify(data)}`)
         },
@@ -845,8 +843,8 @@ struct WatchLivePage {
    */
   imReceiveChatMessage(type: string, message: VHIMMessageModel) {
     if (type === VHRoomEventType.IM_TEXT) {
-      let newMsg = message as VHContent;
-      if (newMsg.data!.target_id !== undefined && newMsg.data!.target_id.length > 0) {
+      let newMsg = message.data as VHMsgData;
+      if (newMsg.target_id !== undefined && newMsg.target_id.length > 0) {
         // 如果是私聊消息，需要产生tab
         this.addPrivateChatTab(JSON.stringify(message));
         EmitterMessage.handleChatImText(type, message);
@@ -1126,7 +1124,7 @@ struct WatchLivePage {
 
   private handlePushCardMsg(message: VHIMMessageModel) {
     this.VHCardDialog.close()
-    let card: VHPushScreenCard = message.data as VHPushScreenCard;
+    let card: VHPushScreenCardMsg = message.data as VHPushScreenCardMsg;
     this.card = card;
     // 创建参数对象
     const params = new PushCardParams(card.card_info, this.webinar_info!);
@@ -1239,7 +1237,7 @@ struct WatchLivePage {
 
   private handleQuestionAnswerOpenClose(type: string, message: VHIMMessageModel) {
     // 问答开启及关闭消息
-    let questionAnswerData: VHQuestionAnswer = message.data as VHQuestionAnswer;
+    let questionAnswerData: VHQuestionAnswerSwitchMsg = message.data as VHQuestionAnswerSwitchMsg;
     if (type == VHRoomEventType.QUESTION_ANSWER_OPEN) {
       this.isShowQuestionAnswer = true;
       this.questionAnswerName = questionAnswerData.name;

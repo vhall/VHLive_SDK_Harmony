@@ -1,7 +1,7 @@
 import { VHCardInfo,
   VHGiftAwardFiled,
   VHGiftAwardItem,
-  VHPushScreenCard, VHSaaSDK,
+  VHPushScreenCardMsg, VHSaaSDK,
   VHWatchGiftAward,
   VHWatchGiftInfo, VHWatchGiftOpenMsg,
   VHWatchGiftParticipate,

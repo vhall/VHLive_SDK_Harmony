@@ -1,4 +1,4 @@
-import { VHCardInfo, VHCommonConfig, VHPushScreenCard, VHSaaSDK, VHWebinarData } from "@vhall/vhall_live";
+import { VHCardInfo, VHCommonConfig, VHPushScreenCardMsg, VHSaaSDK, VHWebinarData } from "@vhall/vhall_live";
 import { PromptActionClass } from "../util/PromptActionClass";
 
 

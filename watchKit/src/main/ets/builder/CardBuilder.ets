@@ -1,5 +1,5 @@
 import {
-  VHCardInfo, VHPushScreenCard, VHSaaSDK, VHWebinarData
+  VHCardInfo, VHPushScreenCardMsg, VHSaaSDK, VHWebinarData
 } from "@vhall/vhall_live";
 import { PromptActionClass } from "../util/PromptActionClass";
 import { ComponentContent } from "@kit.ArkUI";

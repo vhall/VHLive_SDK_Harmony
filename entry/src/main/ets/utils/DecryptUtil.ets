@@ -1,6 +1,8 @@
 import { cryptoFramework } from '@kit.CryptoArchitectureKit';
 import { buffer, util } from '@kit.ArkTS';
 
+
+
 export class DecryptUtil {
 
   static decryptMessage(symKey: cryptoFramework.SymKey, cipherText: cryptoFramework.DataBlob) {
@@ -29,11 +31,11 @@ export class DecryptUtil {
         .replace(/\r/g, "+")          // 回车符替换为"+"号
       const cleanKeyBase64 = keyBase64.replace(/\s/g, '');
       const textEncoder = new util.TextEncoder();
-      const keyUint8: Uint8Array = textEncoder.encode(cleanKeyBase64);
+      const keyUint8: Uint8Array = textEncoder.encodeInto(cleanKeyBase64);
       let keyData = new Uint8Array(keyUint8);
       let symKey = DecryptUtil.genSymKeyByData(keyData);
-      const base64Decoder = new util.Base64();
-      const ciphertextBytes: Uint8Array = base64Decoder.decodeSync(cleanCipherText);
+      let base64 = new util.Base64Helper();
+      const ciphertextBytes: Uint8Array = base64.decodeSync(cleanCipherText);
       let plainText: cryptoFramework.DataBlob = { data: ciphertextBytes };
       let decryptText = DecryptUtil.decryptMessage(symKey, plainText);
       if (decryptText.data !== null) {

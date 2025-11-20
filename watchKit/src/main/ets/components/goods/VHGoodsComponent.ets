@@ -1151,9 +1151,9 @@ export struct VHOrderDialog {
                     couponIds, username, phone, remark, this.webinars.webinar?.id.toString() as string,
                     {
                       onSucceed: (data: VHCreateOrderInfo) => {
-                        if (this.pay === 'WEIXIN') {
+                        if (this.pay === 'WEIXIN') {//微信直播
                           this.openLink(data.ext);
-                        } else {
+                        } else {//支付宝支付
                           const context: common.UIAbilityContext =
                             this.getUIContext().getHostContext()! as common.UIAbilityContext;
                           startBrowsableAbility(context, data.ext);

@@ -1,5 +1,5 @@
 import {
-  VHPushScreenCard,
+  VHPushScreenCardMsg,
   VHPwdRedEnvelopeData,
   VHRedEnvelopeInfo,
   VHRedEnvelopeUserListInfo,
