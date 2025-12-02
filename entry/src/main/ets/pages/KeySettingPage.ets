@@ -6,6 +6,7 @@ import { preferences } from '@kit.ArkData';
 import { BUNDLE_NAME } from 'BuildProfile';
 import { DecryptUtil } from '../utils/DecryptUtil';
 import { VHSaaSDK } from '@vhall/vhall_live';
+import { bundleManager } from '@kit.AbilityKit';
 
 @Builder
 export function KeySettingPageBuilder(name: string, param: object) {
@@ -24,6 +25,25 @@ struct KeySettingPage {
   @State packageName:string = "";
   private decryptKey:string = "EDaaff63bcB4d4M9";
 
+  private  getBundleInfoSync(): bundleManager.BundleInfo {
+    const bundleFlags = bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION |
+    bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_ABILITY |
+    bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_EXTENSION_ABILITY |
+    bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_HAP_MODULE |
+    bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_METADATA |
+    bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_REQUESTED_PERMISSION |
+    bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_SIGNATURE_INFO |
+    bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_ROUTER_MAP |
+    bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_MENU |
+    bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_SKILL |
+    bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_DISABLE;
+    return bundleManager.getBundleInfoForSelfSync(bundleFlags);
+  }
+
+  private formatHexString(input: string): string {
+    return input.match(/.{1,2}/g)?.join(':') || '';
+  }
+
   aboutToAppear(): void {
     let options: preferences.Options = { name: 'room' };
     this.dataPreferences =
@@ -34,6 +54,10 @@ struct KeySettingPage {
     this.packageName = this.dataPreferences.getSync("packageName", "") as string;
     if (this.packageName.length == 0) {
       this.packageName = BUNDLE_NAME;
+    }
+    if(this.sha256.length == 0){
+      let info = this.getBundleInfoSync();
+      this.sha256 = this.formatHexString(info.signatureInfo.fingerprint);
     }
   }
 

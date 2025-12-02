@@ -51,7 +51,7 @@ struct ForcedLoginPage {
   agreeAgreement() {
     VHSaaSDK.getInstance()
       .agreeAgreement(this.webinar_info?.webinar?.id.toString()!, '', '', '', {
-        onSuccess: (data) => {
+        onSuccess: (data:string | object) => {
           console.log(data.toString());
         },
         onFailure: (errorCode: number, errorMsg: string) => {

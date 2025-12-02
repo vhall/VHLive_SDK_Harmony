@@ -640,20 +640,7 @@ export struct VHWatchLivePlayerComponent {
                 const percent = (-deltaY / changeHeight);
                 const width = changeWidth as number;
                 if (touchStartX <= (width / 2)) {
-                  // this.showBrightnessUi = true;
-                  // let brightness = this.currentBrightness;
-                  // brightness += Constants.MAX_BRIGHTNESS * percent;
-                  // if (brightness < 0) {
-                  //   brightness = 0;
-                  // }
-                  // if (brightness > Constants.MAX_BRIGHTNESS) {
-                  //   brightness = Constants.MAX_BRIGHTNESS;
-                  // }
-                  // const finalValue = brightness / Constants.MAX_BRIGHTNESS;
-                  // if (this.windowClass) {
-                  //   this.windowClass.setWindowBrightness(finalValue);
-                  // }
-                  // this.currentBrightness = brightness;
+
                 } else {
                   let v = this.playerVol - (event.offsetY) / 3 / 10;
                   let newVol = this.playerVol + percent;

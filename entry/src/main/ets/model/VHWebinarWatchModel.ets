@@ -24,7 +24,7 @@ export class VHWebinarWatchModel {
           callback.onSucceed(data);
         }
       },
-      onFailure: (errorCode: number, errorMsg: string) => {
+      onFailure: (errorCode, errorMsg) => {
         if (callback) {
           callback.onFailure(errorCode, errorMsg);
         }

@@ -240,7 +240,6 @@ export struct VHGoodsComponent {
                       .enabled(item.covered_status == 0 ? true : false)
                       .backgroundColor('#fb2626')
                       .onClick(() => {
-                        // if (item.covered_status == 0) {
                         //点击跳转支付页面,购买类型;1.平台购买 2.外链购买 3.自定义购买(APP嵌入) 4.自定义购买(小程序嵌入)
                         if (item.buy_type == 1) {
                           this.GoodsData = item
@@ -254,16 +253,12 @@ export struct VHGoodsComponent {
                         } else if (item.buy_type == 4) {
                           ToastUtil.showToast('小程序嵌入自定义购买')
                         }
-                        // } else {
-                        //   ToastUtil.showToast('无法购买')
-                        // }
                       })
                   }
                   .width('100%')
                   .padding(14)
                   .justifyContent(FlexAlign.SpaceBetween)
                   .alignItems(VerticalAlign.Bottom)
-
                   if (item.sale_status == 0) {
                     Column() {
                       Text('-已抢光-')
@@ -1158,10 +1153,6 @@ export struct VHOrderDialog {
                             this.getUIContext().getHostContext()! as common.UIAbilityContext;
                           startBrowsableAbility(context, data.ext);
                         }
-                        // setTimeout(() => {
-                        //   this.OrdersSucceedDialog.open()
-                        //   this.Controller.close()
-                        // }, 5000)
                         ToastUtil.showToast('订单创建成功')
                         this.Controller.close()
                       },

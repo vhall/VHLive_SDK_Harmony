@@ -56,7 +56,7 @@ struct LiveEnterPage {
   private is_auth_check: boolean = false;
   pageInfos: NavPathStack = new NavPathStack() // 导航
   private contentNode: ComponentContent<Object> | null = null;
-  @Provide screenPoster: VHScreenPoster |null = null;
+  @Provide screenPoster: VHScreenPoster | null = null
   private functionConfig: VHConfigList | null = null; //功能配置
 
   aboutToAppear(): void {
@@ -242,7 +242,7 @@ struct LiveEnterPage {
                                   this.pageInfos.pushPath({ name: 'WatchLivePage', param: param }, true);
                                 }
                               },
-                              onFailure: (errorCode: number, errorMsg: string) => {
+                              onFailure: (errorCode, errorMsg) => {
                                 this.pageInfos.pushPath({ name: 'WatchLivePage', param: param }, true);
                                 ToastUtil.showToast(errorMsg);
                               }
@@ -276,7 +276,7 @@ struct LiveEnterPage {
             }
           });
       },
-      onFailure: (errorCode, errorMsg) => {
+      onFailure: (errorCode: number, errorMsg: string) => {
         PromptActionClass.closeDialog();
         this.getUIContext().getPromptAction().showToast({
           message: errorMsg,

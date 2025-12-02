@@ -210,12 +210,11 @@ struct WatchLivePage {
     } catch (e) {
       console.error('获取屏幕尺寸失败: ' + JSON.stringify(e));
     }
-    //连接消息服务
+    //连接消息服务, 此方法会建立websocket进行消息的接收处理。在线状态也是通过此方法控制
     this.imBase = new VHIMServer(this);
     this.imBase.join(this.webinar_info!);
 
-    VHSaaSDK.getInstance()
-      .getConfigList("3", this.webinar_info?.webinar?.id.toString()!,
+    VHSaaSDK.getInstance().getConfigList("3", this.webinar_info?.webinar?.id.toString()!,
         this.webinar_info?.webinar?.userinfo.user_id.toString()!, {
           onSucceed: (data: VHConfigList) => {
             this.functionConfig = data;
@@ -285,10 +284,13 @@ struct WatchLivePage {
         ToastUtil.showToast(errorMsg)
       }
     });
+    //获取公告信息
     this.AnnouncementListHttp()
     this.textData = VHIntroduction.getIntroduction(this.webinar_info?.webinar?.introduction ?? '');
     this.CouponsWebinarId = this.webinar_info?.webinar?.id as number
+    //获取问卷列表。问卷具体实现使用webview嵌入实现
     this.QuestionnaireListHttp(false)
+    //快问快答也是使用嵌入方式实现
     this.ExamListHttp()
     this.initWatchGift()
     VHSaaSDK.getInstance().getDivertingConfig(this.webinar_info?.webinar?.id.toString()!, {
@@ -299,10 +301,12 @@ struct WatchLivePage {
         ToastUtil.showToast(errorMsg);
       }
     })
+    //商品信息
     this.GoodsListHttp()
     this.GoodsActivitySettings()
     this.getCouponsAvailableHttp()
     this.getCouponsNotAvailableHttp()
+
     this.AgreementMessage()
     this.CardListHttp()
     this.LotteryCarryOutHttp()
@@ -1477,7 +1481,10 @@ struct WatchLivePage {
 
   private handleGoods(type: string, message: VHIMMessageModel) {
     this.GoodsList = message.data as VHPushGoodsChangeData
-    this.GoodsInfoHttp(this.GoodsList.cdn_url)
+    if(this.GoodsList.cdn_url.length > 0){
+      this.GoodsInfoHttp(this.GoodsList.cdn_url)
+    }
+    //建议当cdn_url不为空时，获取商品列表也使用getGoodsInfoFromUrl进行获取。
     this.GoodsListHttp()
     this.getCouponsAvailableHttp()
     this.getCouponsNotAvailableHttp()
