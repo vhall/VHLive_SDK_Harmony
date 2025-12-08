@@ -8,7 +8,6 @@ import {
   VHCouponInfo,
   VHCreateOrderInfo,
   VHGoodsActivitySettings,
-  VHGoodsListData,
   VHNotAvailableCouponInfo,
   VHPushGoodsChangeData,
   VHSaaSDK,
@@ -19,17 +18,20 @@ import { WebViewPageBuilder, WebViewParams } from "../../pages/WebViewPage";
 import { PromptActionClass } from "../../util/PromptActionClass";
 import { hilog } from "@kit.PerformanceAnalysisKit";
 import { GoodsWebViewPageBuilder, GoodsWebViewParams } from "../../pages/GoodsPage";
+import { DanmakuUtils } from "@ohos/danmakuflamemaster";
+import { RandomUtil } from "../../utils/RandomUtil";
 
 @Component
 export struct VHGoodsComponent {
   @Require webinars: VHWebinarData;
   @State refreshing: boolean = false
-  @Consume GoodsListData: VHGoodsListData[]
+  @Consume GoodsListData: VHGoodsInfo[]
   @State BottomLoading: boolean = false
-  @State GoodsData: VHGoodsListData | null = null
+  @State GoodsData: VHGoodsInfo | null = null
   @State Index: number = 0
   @Consume ActivitySettings: VHGoodsActivitySettings
   @Prop PushProductData: VHGoodsInfo[]
+  private customDialogComponentId: number = 0
   Scroller: Scroller = new Scroller()
   CouponsDialog = new CustomDialogController({
     builder: VHCouponsDialog({ Index: this.Index, webinars: this.webinars, isCoupons: false }),
@@ -39,7 +41,7 @@ export struct VHGoodsComponent {
   })
   OrderDialog = new CustomDialogController({
     builder: VHOrderDialog({
-      GoodsData: this.GoodsData as VHGoodsListData,
+      GoodsData: this.GoodsData as VHGoodsInfo,
       webinars: this.webinars
     }),
     customStyle: true,
@@ -56,7 +58,6 @@ export struct VHGoodsComponent {
     VHSaaSDK.getInstance().getGoodsList(0,
       {
         onSucceed: (data) => {
-          // this.GoodsListData = data as VHGoodsListData[]
           this.GoodsListData = data.filter(item => item.status === 1);
           console.log(`获取商品列表成功： ${JSON.stringify(this.GoodsListData)}`)
         },
@@ -78,6 +79,31 @@ export struct VHGoodsComponent {
           ToastUtil.showToast(errorMsg);
         }
       });
+  }
+
+  @Builder
+  customDialogComponent() {
+    Column({ space: 20 }) {
+      Button("支付：本地支付").onClick(()=>{
+        this.OrderDialog.open()
+        this.getUIContext().getPromptAction().closeCustomDialog(this.customDialogComponentId);
+      })
+
+      Button("支付：URL跳转支付").onClick(()=>{
+        this.GoodsData = this.GoodsListData[0]
+        if(this.GoodsData.goods_detail_url.length > 0){
+          //  携带自生成的 ext_order_no 作为参数方便回跳作为查询参数,查询订单信息
+          let ext_order_no:string = RandomUtil.generateRandomUUID(true);
+          let url = this.GoodsData.goods_detail_url + "&ext_order_no=" + ext_order_no
+          const context: common.UIAbilityContext =
+            this.getUIContext().getHostContext()! as common.UIAbilityContext;
+          //demo 使用浏览器加载。实际情况也可以在您的应用中使用Web进行加载，同时监听相关页面跳转
+          startBrowsableAbility(context,url);
+        }
+        this.getUIContext().getPromptAction().closeCustomDialog(this.customDialogComponentId);
+      })
+    }.height(200).padding(5)
+    .justifyContent(FlexAlign.Center)
   }
 
   build() {
@@ -113,7 +139,7 @@ export struct VHGoodsComponent {
 
         Refresh({ refreshing: $$this.refreshing }) {
           List({ scroller: this.Scroller }) {
-            ForEach(this.GoodsListData, (item: VHGoodsListData, index) => {
+            ForEach(this.GoodsListData, (item: VHGoodsInfo, index) => {
               ListItem() {
                 Stack() {
                   Row() {
@@ -242,12 +268,28 @@ export struct VHGoodsComponent {
                       .onClick(() => {
                         //点击跳转支付页面,购买类型;1.平台购买 2.外链购买 3.自定义购买(APP嵌入) 4.自定义购买(小程序嵌入)
                         if (item.buy_type == 1) {
-                          this.GoodsData = item
-                          this.OrderDialog.open()
+
+                          this.getUIContext().getPromptAction().openCustomDialog({
+                            builder: () => {
+                              this.customDialogComponent()
+                            },
+                            isModal:true,
+                            showInSubWindow:false,
+                            dialogTransition: // 设置弹窗内容显示的过渡效果
+                            TransitionEffect.translate({ x: 0, y: 290, z: 0 })
+                              .animation({ duration: 500, curve: Curve.Smooth }),// 四秒钟的偏移渐变动画
+                          }).then((dialogId: number) => {
+                            this.customDialogComponentId = dialogId
+                          })
+                            .catch((error: BusinessError) => {
+                              console.error(`openCustomDialog error code is ${error.code}, message is ${error.message}`)
+                            })
+
+                          this.GoodsData = item;
                         } else if (item.buy_type == 2) {
                           const context: common.UIAbilityContext =
                             this.getUIContext().getHostContext()! as common.UIAbilityContext;
-                          startBrowsableAbility(context);
+                          startBrowsableAbility(context,item.url);
                         } else if (item.buy_type == 3) {
                           ToastUtil.showToast('APP嵌入自定义购买')
                         } else if (item.buy_type == 4) {
@@ -296,7 +338,6 @@ export struct VHGoodsComponent {
           .onReachEnd(() => {
             this.BottomLoading = true
             //进行网络请求，请求到数据，添加到列表里
-
             //请求到数据之后，关闭动效
             this.BottomLoading = false
           })
@@ -311,30 +352,10 @@ export struct VHGoodsComponent {
 
         Blank()
           .layoutWeight(1)
-        // if (this.GoodsListData[0].push_status == 1) {
-        //   FloatingWindow({
-        //     Floating: true,
-        //     GoodsData: this.GoodsData as VHGoodsListData,
-        //     GoodsListData: this.GoodsListData,
-        //     ActivitySettings: this.ActivitySettings,
-        //     webinars: this.webinars
-        //   })
-        // } else {
-        //   FloatingWindow({
-        //     Floating: false,
-        //     GoodsData: this.GoodsData as VHGoodsListData,
-        //     GoodsListData: this.GoodsListData,
-        //     ActivitySettings: this.ActivitySettings,
-        //     webinars: this.webinars
-        //   })
-        // }
       }
       .width('100%')
       .height('100%')
       .backgroundColor('#f5f5f5')
-
-      // .justifyContent(FlexAlign.Start)
-      // .alignItems(HorizontalAlign.Start)
     }
   }
 }
@@ -342,19 +363,49 @@ export struct VHGoodsComponent {
 //悬浮窗
 @Component
 export struct FloatingWindow {
+  private customDialogComponentId: number = 0
   @Prop Floating: boolean = true
-  @Prop GoodsListData: VHGoodsListData[]
-  @Prop GoodsData: VHGoodsListData
+  @Prop GoodsListData: VHGoodsInfo[]
+  @Prop GoodsData: VHGoodsInfo
   @Prop ActivitySettings: VHPushGoodsChangeData
   @Require webinars: VHWebinarData;
+  controller: webview.WebviewController = new webview.WebviewController();
+
   OrderDialog = new CustomDialogController({
     builder: VHOrderDialog({
-      GoodsData: this.GoodsData as VHGoodsListData,
+      GoodsData: this.GoodsData as VHGoodsInfo,
       webinars: this.webinars
     }),
     customStyle: true,
     alignment: DialogAlignment.Bottom
   })
+
+
+  @Builder
+  customDialogComponent() {
+    Column({ space: 20 }) {
+      Button("支付：本地支付").onClick(()=>{
+        this.GoodsData = this.GoodsListData[0]
+        this.OrderDialog.open()
+        this.getUIContext().getPromptAction().closeCustomDialog(this.customDialogComponentId);
+      })
+
+      Button("支付：URL跳转支付").onClick(()=>{
+        this.GoodsData = this.GoodsListData[0]
+        if(this.GoodsData.goods_detail_url.length > 0){
+          const context: common.UIAbilityContext =
+            this.getUIContext().getHostContext()! as common.UIAbilityContext;
+          //  携带自生成的 ext_order_no 作为参数方便回跳作为查询参数,查询订单信息
+          let ext_order_no:string = RandomUtil.generateRandomUUID(true);
+          let url = this.GoodsData.goods_detail_url + "&ext_order_no=" + ext_order_no
+          //demo 使用浏览器加载。实际情况也可以在您的应用中使用Web进行加载，同时监听相关页面跳转
+          startBrowsableAbility(context,url);
+        }
+        this.getUIContext().getPromptAction().closeCustomDialog(this.customDialogComponentId);
+      })
+    }.height(200).padding(5)
+    .justifyContent(FlexAlign.Center)
+  }
 
   build() {
     if (this.Floating) {
@@ -392,9 +443,7 @@ export struct FloatingWindow {
                 .fontSize(12)
                 .fontColor('#fff')
             }
-
           }
-
           Text('抢')
             .fontSize(16)
             .fontColor('#fff')
@@ -410,12 +459,25 @@ export struct FloatingWindow {
         .alignItems(VerticalAlign.Bottom)
         .onClick(() => {
           if (this.GoodsListData[0].buy_type == 1) {
-            this.GoodsData = this.GoodsListData[0]
-            this.OrderDialog.open()
+            this.getUIContext().getPromptAction().openCustomDialog({
+              builder: () => {
+                this.customDialogComponent()
+              },
+              isModal:true,
+              showInSubWindow:false,
+              dialogTransition: // 设置弹窗内容显示的过渡效果
+              TransitionEffect.translate({ x: 0, y: 290, z: 0 })
+                .animation({ duration: 500, curve: Curve.Smooth }),// 四秒钟的偏移渐变动画
+            }).then((dialogId: number) => {
+               this.customDialogComponentId = dialogId
+            })
+              .catch((error: BusinessError) => {
+                console.error(`openCustomDialog error code is ${error.code}, message is ${error.message}`)
+              })
           } else if (this.GoodsListData[0].buy_type == 2) {
             const context: common.UIAbilityContext =
               this.getUIContext().getHostContext()! as common.UIAbilityContext;
-            startBrowsableAbility(context);
+            startBrowsableAbility(context,this.GoodsListData[0].url);
           } else if (this.GoodsListData[0].buy_type == 3) {
             ToastUtil.showToast('APP嵌入自定义购买')
           } else if (this.GoodsListData[0].buy_type == 4) {
@@ -438,10 +500,10 @@ function startBrowsableAbility(context: common.UIAbilityContext, url?: string): 
   let want: Want = {
     action: 'ohos.want.action.viewData',
     entities: ['entity.system.browsable'],
-    uri: url || 'https://www.baidu.com/',
-    parameters: {
-      'ohos.ability.params.showDefaultPicker': true
-    }
+    uri: url
+    // parameters: {
+    //   'ohos.ability.params.showDefaultPicker': true
+    // }
   };
   context.startAbility(want)
     .then(() => {
@@ -807,7 +869,7 @@ export struct VHCouponsDialog {
 export struct VHOrderDialog {
   @State value: number = 1
   @State pay: string = 'WEIXIN'
-  @Prop GoodsData: VHGoodsListData = new VHGoodsListData()
+  @Prop GoodsData: VHGoodsInfo = new VHGoodsInfo()
   @Consume CouponsAvailable: VHCouponInfo[]
   @State Index: number = -1 // 初始化为-1，标识未选中优惠券
   @State price: number = 0

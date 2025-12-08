@@ -6,7 +6,6 @@ import {
   VHConfigList,
   VHDisableMsg,
   VHExaminationModel,
-  VHGoodsListData,
   VHIMMessageModel,
   VHIMServer,
   VHMenus,
@@ -29,7 +28,8 @@ import {
   VHLotteryList,
   VHMsgData,
   VHWebinarRecordWatch,
-  VHQuestionAnswerSetMsg
+  VHQuestionAnswerSetMsg,
+  VHGoodsInfo
 } from '@vhall/vhall_live';
 import { VHWatchVodPlayerComponent } from '../components/player/VHWatchVodPlayerComponent';
 import { ChatComponent } from '../components/chat/ChatComponent';
@@ -85,7 +85,7 @@ struct WatchVodPage {
   @State room_tool: VHRoomToolsStatusData | null = null
   @State customMenuList: Array<VHMenus> = new Array();
   @State questionAnswerName: string = '';
-  @Provide GoodsListData: VHGoodsListData[] = []
+  @Provide GoodsListData: VHGoodsInfo[] = []
   @Prop functionConfig: VHConfigList | null = null; //功能配置
   @State announcement: VHAnnouncementData = new VHAnnouncementData();
   @Provide AnnouncementListItem: VHAnnouncementNewsItem = new VHAnnouncementNewsItem();

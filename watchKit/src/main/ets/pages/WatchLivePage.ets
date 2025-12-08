@@ -27,7 +27,6 @@ import {
   VHExamReportList,
   VHExamUserAnswerStatus,
   VHGetSignData,
-  VHGoodsListData,
   VHHistoryQuestionnaire,
   VHHistoryQuestionnaireInfo,
   VHIMMessageModel,
@@ -166,7 +165,7 @@ struct WatchLivePage {
 
   @Provide card: VHPushScreenCardMsg | null = null;
   @Provide GoodsList: VHPushGoodsChangeData | null = null
-  @Provide GoodsListData: VHGoodsListData[] = []
+  @Provide GoodsListData: VHGoodsInfo[] = []
   @Provide CouponsAvailable: VHCouponInfo[] = []
   @Provide CouponsNotAvailable: VHNotAvailableCouponInfo[] = []
   @Provide CouponsWebinarId: number = 0
@@ -652,8 +651,7 @@ struct WatchLivePage {
   GoodsListHttp() {
     VHSaaSDK.getInstance().getGoodsList(0,
       {
-        onSucceed: (data:VHGoodsListData[]) => {
-          // this.GoodsListData = data as VHGoodsListData[]
+        onSucceed: (data:VHGoodsInfo[]) => {
           this.GoodsListData = data.filter(item => item.status === 1);
           console.log(`获取商品列表成功： ${JSON.stringify(this.GoodsListData)}`)
         },
