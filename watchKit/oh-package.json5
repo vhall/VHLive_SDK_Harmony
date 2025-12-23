@@ -7,7 +7,7 @@
   "license": "Apache-2.0",
   "dependencies": {
     "libwatchkit.so": "file:./src/main/cpp/types/libwatchkit",
-    "@vhall/vhall_live": "1.0.13",
+    "@vhall/vhall_live": "1.0.14",
     "@ohos/danmakuflamemaster": "2.0.1",
     "@esky/barrage": "1.0.6"
   }
