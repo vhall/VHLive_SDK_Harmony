@@ -60,8 +60,10 @@ export struct VHDocPageComponent {
       }
     }
     else{
-      //直播回调每次都加载最新的
-      this.documentViews = [];
+      if(this.webinars.webinar?.type != 1){
+        //直播回调每次都加载最新的
+        this.documentViews = [];
+      }
       //为了确保文档每次都刷新添加，延迟展示。
       this.selectDocument = setTimeout(() => {
         this.documentViews.push(id);
@@ -135,16 +137,8 @@ export struct VHDocPageComponent {
         }, (doc: string, index: number) => {
           //this.selectCid 发生改变时刷新文档当前页。需要延刷新。
           if (this.selectCid == doc) {
-            if (this.selectDocument != 0) {
-              clearInterval(this.selectDocument);
-              this.selectDocument = 0;
-            }
-            this.selectDocument = setInterval(() => {
+             setTimeout(() => {
               this.controller.changeIndex(index);
-              if (this.selectDocument != 0) {
-                clearInterval(this.selectDocument);
-                this.selectDocument = 0;
-              }
             }, 100);
           }
           return doc;
