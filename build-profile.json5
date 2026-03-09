@@ -7,11 +7,11 @@
         "material": {
           "certpath": "C:\\Users\\yuqiu\\.ohos\\config\\default_saas_sdk_harmony_github_n2Lu8bx0qPQA-NCId3eTod_IS8J5ca1BiC2OQsDBLyY=.cer",
           "keyAlias": "debugKey",
-          "keyPassword": "0000001B8EE6484A2A7FD112858C8FFA14901E051A98654FD19F4A811F82FF51F2789F480A852C4542CB30",
+          "keyPassword": "0000001B39818C691E877CA2461A18F08D435ED0F7BF7522764EBFF5023DE8DBCAB49DC51EA031B2E32420",
           "profile": "C:\\Users\\yuqiu\\.ohos\\config\\default_saas_sdk_harmony_github_n2Lu8bx0qPQA-NCId3eTod_IS8J5ca1BiC2OQsDBLyY=.p7b",
           "signAlg": "SHA256withECDSA",
           "storeFile": "C:\\Users\\yuqiu\\.ohos\\config\\default_saas_sdk_harmony_github_n2Lu8bx0qPQA-NCId3eTod_IS8J5ca1BiC2OQsDBLyY=.p12",
-          "storePassword": "0000001B27A78F332C3D7B18B4C11A185058E4185ED9819E9179BDD02F47C4C0615EF959A35E6DF0096C51"
+          "storePassword": "0000001BC79FD9B251E2AD1C71884A36720895ECD077FF05B0075BCF8E312D07135182601273B66C631D7A"
         }
       }
     ],
@@ -54,6 +54,6 @@
     {
       "name": "watchKit",
       "srcPath": "./watchKit",
-    }
+    },
   ]
 }

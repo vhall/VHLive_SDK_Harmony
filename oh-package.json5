@@ -4,12 +4,14 @@
   "dependencies": {
     "@tencentcloud/imsdk": "8.6.7020",
     "@esky/barrage": "^1.0.6",
-    "@vhall/vhallyun-lss-vod": "^1.10.5",
+    "@vhall/vhallyun-lss-vod": "^1.10.7",
     "@vhall/vhallyun-framework": "^1.10.3",
-    "@vhall/vhallyun-doc": "^1.10.8",
+    "@vhall/vhallyun-doc": "^1.10.10",
     "@vhall/vhallyun-ims": "^1.10.4",
     "crypto-js": "^4.1.1",
-    "@vhall/vhall_live": "^1.0.13"
+    "@umeng/common": "^1.1.8",
+    "@umeng/analytics": "^1.2.11",
+    "@umeng/apm": "^1.2.11"
   },
   "devDependencies": {
     "@ohos/hypium": "1.0.21",

@@ -1,4 +1,4 @@
-import { ComponentContent, KeyboardAvoidMode } from '@kit.ArkUI';
+import { ComponentContent, CustomContentDialog, KeyboardAvoidMode, LengthMetrics } from '@kit.ArkUI';
 import {
   VHGiftMessageInfo,
   VHLikeIcon,
@@ -47,7 +47,20 @@ import { util } from '@kit.ArkTS';
 import { picker } from '@kit.CoreFileKit';
 import MsgType from '../../constants/MsgType';
 import { createExamReportView, reportParams } from '../../builder/ExamReportBuilder';
+import { VHRtcSDK } from '@vhall/vhall_rtc';
+import { PermissionUtil } from '../../utils/PermissionUtil';
+import { faceDetector } from '@kit.CoreVisionKit';
+import { BeautyComponent } from '../beauty/BeautyComponent';
+import { PreferencesUtil } from '../../utils/PreferencesUtil';
+import { VHBeautySDK } from '@vhall/vhall_beauty';
+import { image } from '@kit.ImageKit';
+import { common } from '@kit.AbilityKit';
 
+interface ISpeakData {
+  img: ResourceStr
+  text: string
+  click: () => void
+}
 
 /**
  * 主界面（聊天单页）。
@@ -111,7 +124,21 @@ export struct ChatComponent {
   private isHandlingReachEnd: boolean = false
   @State enableWelcome:boolean = false;
   @State welcomeMsg:string = "";
-
+  @State isHandSup: boolean = false;
+  @Prop isSpeak: boolean = false;
+  @State isVideoStatus: boolean = false; //摄像头状态
+  @State isMicrophoneStatus: boolean = false; //麦克风状态
+  @State isCameraStatus: boolean = false; //相机反转状态
+  @State isMirrorStatus: boolean = false; //镜像状态
+  @State isSpeakShow: boolean = false;
+  @State isHandSupShow: boolean = false;
+  @State HandSupText: string = "申请上麦";
+  @State isCounting: boolean = false; // 是否正在倒计时
+  @State isPushPixmap: boolean = false; // 图片推流
+  private countdownTimer: number | null = null; // 倒计时定时器ID
+  private dialogController: CustomDialogController = new CustomDialogController({
+    builder: ConnectInviteDialog({roomId:this.webinars?.interact?.room_id!}),
+  })
   aboutToAppear() {
     // 本界面显示时，将输入法软键盘避让模式设置为KeyboardAvoidMode.RESIZE（即压缩窗体，而不是将窗体整体上移）
     // this.setKeyboardAvoidModeToRESIZE(this.getUIContext(), true);
@@ -145,11 +172,24 @@ export struct ChatComponent {
     if (this.room_tool?.all_banned == 1 || this.webinars?.join_info?.is_gag == 1) {
       this.chatDisable = true;
     }
+    if (this.room_tool?.is_handsup == 1) {
+      this.isHandSup = true;
+    }
     if (this.isLive == false && this.functionConfig?.watch_record_no_chatting == 1) {
       // 回放禁言
       this.chatDisable = true;
     }
     this.AgreementMessage();
+    this.subscribeConnectOpen();
+    this.subscribeConnectClose();
+    this.subscribeConnectInvite();
+    this.subscribeConnectAgree();
+    this.subscribeConnectInviteAgree();
+    this.subscribeDisConnectSuccess();
+    this.subscribeMute();
+    this.subscribeMuteCancel();
+    this.subscribeFramesForbid();
+    this.subscribeFramesDisplay();
   }
 
   /**
@@ -173,6 +213,18 @@ export struct ChatComponent {
     EmitterUtil.unsubscribe(VHRoomEventType.CHAT_DELETE);
     EmitterUtil.unsubscribe(VHRoomEventType.CHAT_MSG_SET_RECOMMEND);
     EmitterUtil.unsubscribe(VHRoomEventType.CHAT_MSG_DEL_RECOMMEND);
+    EmitterUtil.unsubscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_OPEN);
+    EmitterUtil.unsubscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_CLOSE);
+    EmitterUtil.unsubscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_INVITE);
+    EmitterUtil.unsubscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_AGREE);
+    EmitterUtil.unsubscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_INVITE_AGREE);
+    EmitterUtil.unsubscribe(VHRoomEventType.MESSAGE_VRTC_DISCONNECT_SUCCESS);
+    EmitterUtil.unsubscribe(VHRoomEventType.MESSAGE_VRTC_MUTE);
+    EmitterUtil.unsubscribe(VHRoomEventType.MESSAGE_VRTC_MUTE_CANCEL);
+    EmitterUtil.unsubscribe(VHRoomEventType.MESSAGE_VRTC_FRAMES_FORBID);
+    EmitterUtil.unsubscribe(VHRoomEventType.MESSAGE_VRTC_FRAMES_DISPLAY);
+    // 清理定时器
+    this.stopCountdown();
   }
 
   //问卷弹窗
@@ -187,6 +239,12 @@ export struct ChatComponent {
     customStyle: true,
     alignment: DialogAlignment.Bottom
   })
+  //美颜弹窗
+  VHBeautyDialog = new CustomDialogController({
+    builder: BeautyComponent(),
+    customStyle: true,
+    alignment: DialogAlignment.Bottom
+  })
 
   //观看协议消息
   AgreementMessage() {
@@ -194,6 +252,9 @@ export struct ChatComponent {
       let recordId:string = "";
       if(this.webinars.webinar.type == 5){
         recordId = this.webinars.record?.record_id!;//回放获取当前回放id
+      }
+      if(this.webinars.webinar.mode == 3 && this.webinars.join_info?.role_name != 2){//demo中互动直播不获取
+        return;
       }
       VHSaaSDK.getInstance().getWatchInfo(this.webinars.webinar.id.toString(), recordId, '', '',  {
         onSucceed: (data: VHWebinarData) => {
@@ -403,6 +464,88 @@ export struct ChatComponent {
           this.scrollToBottom();
         }, 100);
       }
+    });
+  }
+
+  //订阅手势举手
+  subscribeConnectOpen() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_OPEN, (msgData: EmitterMsgData) => {
+      this.isHandSup = true;
+      ToastUtil.showToast("举手按钮开启");
+    });
+  }
+
+  //订阅手势取消举手
+  subscribeConnectClose() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_CLOSE, (msgData: EmitterMsgData) => {
+      this.isHandSup = false;
+      ToastUtil.showToast("举手按钮关闭");
+    });
+  }
+
+  //订阅邀请连麦
+  subscribeConnectInvite() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_INVITE, (msgData: EmitterMsgData) => {
+      this.dialogController.open();
+    });
+  }
+
+  //订阅互动连麦连接同意
+  subscribeConnectAgree() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_AGREE, (msgData: EmitterMsgData) => {
+      this.speak();
+      this.stopCountdown();
+    });
+  }
+
+  //订阅互动连麦连接同意
+  subscribeConnectInviteAgree() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_INVITE_AGREE, (msgData: EmitterMsgData) => {
+      this.speak();
+    });
+  }
+
+  //订阅互动连麦取消连接成功
+  subscribeDisConnectSuccess() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_DISCONNECT_SUCCESS, (msgData: EmitterMsgData) => {
+      this.isSpeak = false;
+      this.isVideoStatus = false;
+      this.isMicrophoneStatus = false;
+      this.isMirrorStatus = false;
+      this.isCameraStatus = false;
+      this.isPushPixmap = false;
+    });
+  }
+
+  //静音某路流
+  subscribeMute() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_MUTE, (msgData: EmitterMsgData) => {
+      this.isMicrophoneStatus = true;
+      VHRtcSDK.getInstance().muteLocalAudio(this.isMicrophoneStatus);
+    });
+  }
+
+  //取消静音某路流
+  subscribeMuteCancel() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_MUTE_CANCEL, (msgData: EmitterMsgData) => {
+      this.isMicrophoneStatus = false;
+      VHRtcSDK.getInstance().muteLocalAudio(this.isMicrophoneStatus);
+    });
+  }
+
+  //禁止显示某路流的画面
+  subscribeFramesForbid() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_FRAMES_FORBID, (msgData: EmitterMsgData) => {
+      this.isVideoStatus = true;
+      VHRtcSDK.getInstance().muteLocalVideo(this.isVideoStatus);
+    });
+  }
+
+  //显示某路流的画面
+  subscribeFramesDisplay() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_FRAMES_DISPLAY, (msgData: EmitterMsgData) => {
+      this.isVideoStatus = false;
+      VHRtcSDK.getInstance().muteLocalVideo(this.isVideoStatus);
     });
   }
 
@@ -884,6 +1027,190 @@ export struct ChatComponent {
     });
   }
 
+  // 用户举手申请上麦
+  apply() {
+    VHRtcSDK.getInstance().apply(this.webinars?.interact?.room_id!, {
+      onSuccess: (data: string | object) => {
+        ToastUtil.showToast("申请成功", {bottom: 160});
+        this.startCountdown(); // 开始倒计时
+      },
+      onFailure: (errorCode, errorMsg) => {
+        console.log("用户举手申请上麦失败：", errorMsg)
+      }
+    });
+  }
+
+  // 用户取消申请上麦
+  cancelApply() {
+    VHRtcSDK.getInstance().cancelApply(this.webinars?.interact?.room_id!, {
+      onSuccess: (data: string | object) => {
+        console.log("用户取消申请上麦成功")
+      },
+      onFailure: (errorCode, errorMsg) => {
+        console.log("用户取消申请上麦失败：", errorMsg)
+      }
+    });
+  }
+
+  // 用户上麦
+  speak() {
+    VHRtcSDK.getInstance().speak(this.webinars?.interact?.room_id!, {
+      onSuccess: (data: string | object) => {
+        this.isSpeak = true;
+        console.log("用户上麦成功");
+      },
+      onFailure: (errorCode, errorMsg) => {
+        console.log("用户上麦失败：", errorMsg);
+      }
+    });
+  }
+
+  // 用户下麦
+  userNoSpeak() {
+    VHRtcSDK.getInstance().userNoSpeak(this.webinars?.interact?.room_id!, {
+      onSuccess: (data: string | object) => {
+        console.log("用户下麦成功");
+      },
+      onFailure: (errorCode, errorMsg) => {
+        console.log("用户下麦失败：", errorMsg);
+      }
+    });
+  }
+
+  // 设置房间用户的设备检测状态
+  setDevice() {
+    VHRtcSDK.getInstance().setDevice(this.webinars?.interact?.room_id!, "1", "1", {
+      onSuccess: (data: string | object) => {
+        console.log("设置房间用户的设备检测状态成功")
+      },
+      onFailure: (errorCode, errorMsg) => {
+        console.log("设置房间用户的设备检测状态失败：", errorMsg)
+      }
+    });
+  }
+
+  /**
+   * 开始倒计时
+   */
+  startCountdown() {
+    // 如果已经在倒计时，则先清除之前的定时器
+    if (this.countdownTimer !== null) {
+      clearInterval(this.countdownTimer);
+    }
+
+    // 重置倒计时参数
+    let countdown = 30;
+    this.isCounting = true;
+    this.HandSupText = `等待中... (${countdown}s)`;
+
+    // 开始倒计时
+    this.countdownTimer = setInterval(() => {
+      countdown--;
+
+      if (countdown > 0) {
+        this.HandSupText = `等待中... (${countdown}s)`;
+      } else {
+        // 倒计时结束
+        this.HandSupText = "申请上麦";
+        this.isCounting = false;
+        if (this.countdownTimer !== null) {
+          clearInterval(this.countdownTimer);
+          this.countdownTimer = null;
+        }
+        this.cancelApply();
+      }
+    }, 1000); // 每1000毫秒(1秒)执行一次
+  }
+
+  /**
+   * 停止倒计时
+   */
+  stopCountdown() {
+    if (this.countdownTimer !== null) {
+      clearInterval(this.countdownTimer);
+      this.countdownTimer = null;
+    }
+    this.isCounting = false;
+    this.isHandSupShow = false;
+    this.HandSupText = "申请上麦";
+  }
+
+  getUpdatedSpeakData(): ISpeakData[] {
+    return [
+      {
+        img: this.isVideoStatus ? $r("app.media.icon_video_close") : $r("app.media.icon_video_open"),
+        text: "摄像头",
+        click: () => {
+          VHRtcSDK.getInstance().setDeviceStatus(
+            this.webinars?.interact?.room_id!,
+            this.webinars?.join_info?.third_party_user_id!,
+            "2",
+            this.isVideoStatus? "1" : "0",
+            {
+              onSuccess: (data: string | object) => {
+              },
+              onFailure: (errorCode, errorMsg) => {
+              }
+          })
+        }
+      },
+      {
+        img: this.isMicrophoneStatus ? $r("app.media.icon_microphone_close") : $r("app.media.icon_microphone_open"),
+        text: "麦克风",
+        click: () => {
+          VHRtcSDK.getInstance().setDeviceStatus(
+            this.webinars?.interact?.room_id!,
+            this.webinars?.join_info?.third_party_user_id!,
+            "1",
+            this.isMicrophoneStatus? "1" : "0",
+            {
+              onSuccess: (data: string | object) => {
+              },
+              onFailure: (errorCode, errorMsg) => {
+              }
+          })
+        }
+      },
+      {img: $r("app.media.icon_camera"), text: "相机", click: () => {
+        // if (PreferencesUtil.getSync("isBeautyEnable", false)) {
+        //   VHBeautySDK.getInstance().switchCamera(this.isCameraStatus);
+        // } else {
+        //   VHRtcSDK.getInstance().switchCamera(this.isCameraStatus);
+        // }
+        VHRtcSDK.getInstance().switchCamera(this.isCameraStatus);
+        this.isCameraStatus = !this.isCameraStatus;
+      }},
+      {img: $r("app.media.icon_hand"), text: "下麦", click: () => {
+        this.userNoSpeak();
+      }},
+      {img: $r("app.media.icon_mirror_selected"), text: "流镜像", click: () => {
+        // if(PreferencesUtil.getSync("isBeautyEnable", false)) {
+        //   ToastUtil.showToast("开启美颜状态下，镜像功能待实现~");
+        //   return;
+        // }
+        VHRtcSDK.getInstance().setMirrorType(this.isMirrorStatus);
+        this.isMirrorStatus = !this.isMirrorStatus;
+      }},
+      {img: $r("app.media.icon_beautify"), text: "美颜", click: () => {
+        this.isSpeakShow = false;
+        this.VHBeautyDialog.open();
+      }},
+      {img: $r("app.media.icon_muteImage"), text: "图片推流", click: () => {
+        if(this.isPushPixmap){
+          VHRtcSDK.getInstance().setVideoMuteImage(null,5);
+          this.isPushPixmap = false;
+        }else{
+          this.isPushPixmap = true;
+          let context = this.getUIContext().getHostContext() as common.UIAbilityContext;
+          let videoMuteImageFd = context.resourceManager.getMediaContentSync($r("app.media.video_mute_image"));
+          let imageSource : image.ImageSource = image.createImageSource(videoMuteImageFd.buffer);
+          let pixelMap = imageSource.createPixelMapSync({ desiredPixelFormat: image.PixelMapFormat.BGRA_8888 });
+          VHRtcSDK.getInstance().setVideoMuteImage(pixelMap,5);
+        }
+      }}
+    ];
+  }
+
   /**
    * 高亮显示文本中的关键字。
    *
@@ -905,6 +1232,66 @@ export struct ChatComponent {
   //     });
   //   }
   // }
+
+  @Builder
+  HandSupBuilder(){
+    Column({space:40}) {
+      Column({space:10}){
+        Image($r("app.media.icon_hand"))
+          .width(20)
+          .height(20)
+        Text(this.HandSupText)
+          .fontColor("#262626")
+          .fontSize(14)
+      }
+      .width("100%")
+      .onClick(()=>{
+        if(!this.isCounting){
+          this.apply();
+        }
+      })
+      Text("取消")
+        .width("100%")
+        .textAlign(TextAlign.Center)
+        .onClick(()=>{
+          this.isHandSupShow = false;
+        })
+    }
+    .padding({top:18})
+    .width("100%")
+    .height("100%")
+  }
+
+  @Builder
+  SpeakBuilder(){
+    Column() {
+      Flex({
+        wrap: FlexWrap.Wrap,
+        justifyContent: FlexAlign.Center,
+        alignItems: ItemAlign.Center,
+        space:{cross:LengthMetrics.px(100)}
+      }){
+        ForEach(this.getUpdatedSpeakData(), (item: ISpeakData, index) => {
+          Column({space:10}){
+            Image(item.img)
+              .width(30)
+              .height(30)
+            Text(item.text)
+              .fontSize(14)
+              .fontColor(Color.Gray)
+          }
+          .width(80)
+          .onClick(()=>{
+            item.click();
+          })
+        })
+      }
+      .width("100%")
+      .padding({top:30, left: 18, right: 18})
+    }
+    .width("100%")
+    .height("100%")
+  }
 
   build() {
     // Navigation(this.pageInfos) {
@@ -1262,6 +1649,40 @@ export struct ChatComponent {
                 this.messageInput = msg
               })
 
+            if (this.isHandSup && !this.isSpeak) {
+              Image($r('app.media.icon_publish'))
+                .width(30)
+                .height(30)
+                .margin({ left: 5, right: 5 })
+                .onClick(async () => {
+                  let result = await PermissionUtil.requestPermissions(['ohos.permission.MICROPHONE', 'ohos.permission.CAMERA']);
+                  if(!result) {
+                    ToastUtil.showToast("没有音视频权限不可以上麦");
+                    return;
+                  }
+                  this.setDevice();
+                  this.isHandSupShow = true;
+                })
+                .bindSheet($$this.isHandSupShow, this.HandSupBuilder(), {
+                  height: 160,
+                  showClose: false
+                })
+            }
+
+            if (this.isSpeak) {
+              Image($r('app.media.icon_publish'))
+                .width(30)
+                .height(30)
+                .margin({ left: 5, right: 5 })
+                .onClick(async () => {
+                  this.isSpeakShow = true;
+                })
+                .bindSheet($$this.isSpeakShow, this.SpeakBuilder(), {
+                  height: 240,
+                  showClose: false
+                })
+            }
+
             Button("提交", { type: ButtonType.Normal, stateEffect: true })
               .width(44)
               .height(34)
@@ -1386,4 +1807,67 @@ export struct ChatComponent {
   }
 
   // }
+}
+
+@CustomDialog
+struct ConnectInviteDialog {
+  private roomId: string = "";
+  dialogController: CustomDialogController = new CustomDialogController({
+    builder: ConnectInviteDialog({ roomId: this.roomId}),
+  })
+
+  //用户同意上麦邀请
+  agreeInvite() {
+    VHRtcSDK.getInstance().agreeInvite(this.roomId, {
+      onSuccess: (data: string | object) => {
+        ToastUtil.showToast("上麦成功");
+      },
+      onFailure: (errorCode, errorMsg) => {
+        ToastUtil.showToast(errorMsg);
+      }
+    });
+  }
+
+  // 用户拒绝上麦邀请
+  rejectInvite() {
+    VHRtcSDK.getInstance().rejectInvite(this.roomId, {
+      onSuccess: (data: string | object) => {
+        ToastUtil.showToast("拒绝上麦成功");
+      },
+      onFailure: (errorCode, errorMsg) => {
+        ToastUtil.showToast(errorMsg);
+      }
+    });
+  }
+
+  build() {
+    Column(){
+      Text("邀请您上麦,  是否同意?")
+        .width("100%")
+        .height(80)
+        .textAlign(TextAlign.Center)
+      Row(){
+        Text("拒绝")
+          .width("50%")
+          .textAlign(TextAlign.Center)
+          .onClick(() => {
+            this.dialogController.close();
+            this.rejectInvite();
+          })
+          .height(50)
+          .border({width:{right:1}, color:"#eeeeee"})
+        Text("同意")
+          .width("50%")
+          .textAlign(TextAlign.Center)
+          .fontColor(Color.Red)
+          .onClick(() => {
+            this.dialogController.close();
+            this.agreeInvite();
+          })
+          .height(50)
+      }
+      .width("100%")
+      .border({width:{top:1}, color:"#eeeeee"})
+    }
+  }
 }

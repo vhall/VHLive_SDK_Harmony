@@ -23,6 +23,10 @@
     {
       "name": "EntryAbility1_label",
       "value": "label"
+    },
+    {
+      "name": "app_tracking",
+      "value": "app tracking"
     }
   ]
 }

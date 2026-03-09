@@ -15,6 +15,14 @@
     {
       "name": "write_imagevideo",
       "value": "需要写入图片/视频到相册"
+    },
+    {
+      "name": "camera",
+      "value": "用于拍照、拍视频、扫描二维码等"
+    },
+    {
+      "name": "microphone",
+      "value": "用于提供语言相关的功能或服务"
     }
   ]
 }

@@ -361,6 +361,18 @@ struct LiveEnterPage {
             this.recordId = "";
             this.initWebinar();
           })
+          Button('互动直播').onClick(() => {
+            let param: object = new Object();
+            param['webinar_id'] = this.webinar_id;
+            param['nick_name'] = this.nick_name;
+            this.pageInfos.pushPath({ name: 'HostLivePage', param: param }, true);
+          })
+          Button('视频直播').onClick(() => {
+            let param: object = new Object();
+            param['webinar_id'] = this.webinar_id;
+            param['nick_name'] = this.nick_name;
+            this.pageInfos.pushPath({ name: 'VideoLivePage', param: param }, true);
+          })
         }
         .width('100%')
         .padding(10)

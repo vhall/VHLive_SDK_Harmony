@@ -67,7 +67,9 @@ import {
   VHGoodsActivitySettings,
   VHDataDownloadUpdateMsg,
   VHGoodsInfoCallback,
-  VHGoodsListCallback
+  VHGoodsListCallback,
+  VHInviteData,
+  VHAppUpdate
 } from '@vhall/vhall_live';
 import { VHWatchLivePlayerComponent } from '../components/player/VHWatchLivePlayerComponent';
 import { ChatComponent } from '../components/chat/ChatComponent';
@@ -99,6 +101,17 @@ import { VHIntroductionView } from '../components/introduction/VHIntroductionVie
 import { preferences } from '@kit.ArkData';
 import { PrivateChatComponent } from '../components/chat/PrivateChatComponent';
 import MsgType from '../constants/MsgType';
+import { VhallCaptureFrame, VhallCodeNum, VhallMediaType,
+  VhallRtcConnectSuccessData,
+  VhallStream,
+  VhallStreamType,
+  VHRtcSDK,
+  VHSpeakListInfo} from '@vhall/vhall_rtc';
+import { VHRTCUserInfo } from '../components/rtc/VHRTCUserInfo';
+import { VHRTCUserComponent } from '../components/rtc/VHRTCUserComponent';
+import { VhallBeautyFrame, VHBeautyDataService, VHBeautySDK } from '@vhall/vhall_beauty';
+import { PreferencesUtil } from '../utils/PreferencesUtil';
+import { AVSessionManager } from '../utils/AVSessionManager';
 
 const WINDOW_SYSTEM_BAR: Array<'status' | 'navigation'> = ['navigation', 'status'];
 const RECONNECT_TIMEOUT: number = 3000;
@@ -197,6 +210,12 @@ struct WatchLivePage {
   @Provide ActivitySettings: VHGoodsActivitySettings = new VHGoodsActivitySettings()
   @State commonConfig: VHCommonConfig = new VHCommonConfig;
   @State hideState: number = 0;
+  @State streamList: VHRTCUserInfo[] = [];
+  @State isRTCRoom: boolean = false;
+  @State userId: string = '';
+  @State isScreenOrMediaStream:boolean = false;
+  private rePushTimer:number = -1;
+  private avSessionManager = new AVSessionManager()
   aboutToAppear() {
     this.LotteryCarryOut = null;
     this.getUIContext().setKeyboardAvoidMode(KeyboardAvoidMode.RESIZE)
@@ -212,7 +231,6 @@ struct WatchLivePage {
     //连接消息服务, 此方法会建立websocket进行消息的接收处理。在线状态也是通过此方法控制
     this.imBase = new VHIMServer(this);
     this.imBase.join(this.webinar_info!);
-
     VHSaaSDK.getInstance().getConfigList("3", this.webinar_info?.webinar?.id.toString()!,
         this.webinar_info?.webinar?.userinfo.user_id.toString()!, {
           onSucceed: (data: VHConfigList) => {
@@ -300,12 +318,12 @@ struct WatchLivePage {
         ToastUtil.showToast(errorMsg);
       }
     })
+
     //商品信息
     this.GoodsListHttp()
     this.GoodsActivitySettings()
     this.getCouponsAvailableHttp()
     this.getCouponsNotAvailableHttp()
-
     this.AgreementMessage()
     this.CardListHttp()
     this.LotteryCarryOutHttp()
@@ -331,9 +349,201 @@ struct WatchLivePage {
 
     });
     this.PushProductData = this.dataPreferences.getSync('isPushProductData', '') as VHGoodsInfo[]
+    const context = this.getUIContext().getHostContext();
+    // 是否开启美颜功能
+    PreferencesUtil.putSync("isBeautyEnable", true);
+    if(this.webinar_info && context) {
+      this.userId = this.webinar_info?.join_info?.third_party_user_id!;
+      VHBeautySDK.getInstance().init(this.webinar_info?.webinar?.id.toString()!,
+        this.webinar_info?.webinar?.userinfo.user_id.toString()!,{
+          onSucceed: (data: number) => {
+            ToastUtil.showToast("美颜SDK初始化成功");
+          },
+          onFailure: (errorCode: number, errorMsg: string) => {
+            ToastUtil.showToast("美颜SDK初始化失败");
+          }
+        });
+      VHRtcSDK.getInstance().init(
+        context,
+        this.webinar_info,
+        {
+          onConnectRoom: (errorCode: number, errorMsg: string): void => {
+            let selfItem = new VHRTCUserInfo(this.userId, false);
+            selfItem.nickName = this.webinar_info?.join_info?.nickname!;
+            const isUserExists = this.streamList.some(item => item.userId === this.userId);
+            if (!isUserExists) {
+              this.streamList.push(selfItem);
+              let msgData: EmitterMsgData;
+              msgData = {
+                type: "CreateLocalStream",
+                data: ""
+              } as EmitterMsgData;
+              EmitterUtil.send(msgData);
+            }
+          },
+          onConnectionRoomLost: (): void => {
+            ToastUtil.showToast("SDK 与互动服务器的连接已经断开。");
+          },
+          onReconnectRoom: (): void => {
+            ToastUtil.showToast("SDK 正在尝试重新连接互动服务。");
+          },
+          onConnectionRecovery: (): void => {
+            ToastUtil.showToast("SDK 已恢复与互动服务端的连接。");
+            setTimeout(()=>{
+              VHSaaSDK.getInstance().getRoomToolsState(
+                this.webinar_info?.switch_info?.switch_id.toString()!, this.webinar_info?.interact?.room_id!, {
+                onSuccess: (data: VHRoomToolsStatusData) => {
+                  let user = data.speaker_list.find(item => item.account_id === this.webinar_info?.join_info?.third_party_user_id)
+                  if(user === undefined){
+                    VHRtcSDK.getInstance().unPublish();
+                    this.handleExitRoom(new VHIMMessageModel);
+                  }else{
+                    VHRtcSDK.getInstance().unPublish();
+                    VHRtcSDK.getInstance().publish();
+                  }
+                },
+                onFailure: (errorCode: number, errorMsg: string) => {
+                  console.log(`获取观看端-获取房间状态失败： ${errorMsg}`);
+                }
+              })
+            },0)
+          },
+          onError: (errCode: number, errMsg: string): void => {
+            ToastUtil.showToast("SDK 错误：" + errCode + " " + errMsg);
+          },
+          onWarning: (warningCode: number, warningMsg: string): void => {
+            ToastUtil.showToast("SDK 警告：" + warningCode + " " + warningMsg);
+          },
+          onPublishStream: (stream: VhallStream): void => {
+            ToastUtil.showToast("发布流成功");
+          },
+          onUnPublishStream: (stream: VhallStream): void => {
+            ToastUtil.showToast("取消发布流");
+          },
+          onRemoteStreamAdd: (stream: VhallStream): void => {
+            const remoteStream = this.streamList.find(item => item.streamId === stream.streamId);
+            if (!remoteStream) {
+              let selfItem = new VHRTCUserInfo(stream.userId, true);
+              selfItem.streamId = stream.streamId;
+              selfItem.streamType = stream.streamType;
+              selfItem.streamAttr = stream.attribute;
+              let attribute = JSON.parse(stream.attribute) as object;
+              selfItem.nickName = attribute["nickName"];
+              if (attribute["roleName"] === 1) {
+                if (!this.streamList.some(item => item.isMain)) {
+                  selfItem.isMain = true;
+                }
+              }
+              this.streamList.push(selfItem);
+            } else {
+              if (remoteStream.controller !== null) {
+                remoteStream.updateRenderParams(remoteStream.controller);
+              }
+            }
+            if(stream.streamType == VhallStreamType.VHStreamType_Desktop || stream.streamType == VhallStreamType.VHStreamType_MediaFile
+              || stream.streamType == VhallStreamType.VHStreamType_SoftWare){
+              this.isScreenOrMediaStream = true;
+            }
+          },
+          onRemoteStreamRemoved: (stream: VhallStream): void => {
+            if(stream.streamType == VhallStreamType.VHStreamType_Desktop || stream.streamType == VhallStreamType.VHStreamType_MediaFile
+              || stream.streamType == VhallStreamType.VHStreamType_SoftWare){
+              this.isScreenOrMediaStream = false;
+            }
+            for (let i = this.streamList.length - 1; i >= 0; i--) {
+              try {
+                if (stream.streamId == this.streamList[i].streamId) {
+                  this.streamList.splice(i, 1); // 从后往前删除元素
+                  break;
+                }
+              } catch (err) {
+              }
+            }
+          },
+          onSubScribeStream: (stream: VhallStream, type: VhallMediaType): void => {
+            console.info("订阅流");
+          },
+          onSubScribeStreamFailed: (code: number, msg: string, stream_id: string): void => {
+            ToastUtil.showToast("订阅流失败：" + code + " " + msg);
+            //订阅失败重新拉流订阅
+            setTimeout(()=>{
+              if(code == VhallCodeNum.ERR_MEDIA_CONNECT_CONNECT_ERROR || code == VhallCodeNum.ERR_ICE_CONNECT_CONNECT_ERROR || code == VhallCodeNum.ERR_DISCONNECTED){
+                for (let i = this.streamList.length - 1; i >= 0; i--) {
+                  try {
+                    if (stream_id == this.streamList[i].streamId) {
+                      let controller = this.streamList[i].controller;
+                      if(controller != null){
+                        this.streamList[i].updateRenderParams(controller!);
+                      }
+                      break;
+                    }
+                  } catch (err) {
+                    console.error('request CAMERA error=' + JSON.stringify(err));
+                  }
+                }
+              }
+            },1000)
+          },
+          onUnSubScribeStream: (stream: VhallStream): void => {
+            console.info("取消订阅流");
+          },
+          onUserVideoAvailable: (stream: VhallStream, available: number): void => {
+            this.streamList.forEach((item: VHRTCUserInfo) => {
+              item.isCamera = item.streamId === stream.streamId ? available === 0 ? false : true : item.isCamera;
+            });
+          },
+          onUserAudioAvailable: (stream: VhallStream, available: number): void => {
+            this.streamList.forEach((item: VHRTCUserInfo) => {
+              item.isMute = item.streamId === stream.streamId ? available === 1 ? false : true : item.isMute;
+            });
+          },
+          onUserStatistics: (stream: VhallStream, lost: number): void => {
+            this.streamList.forEach((item: VHRTCUserInfo) => {
+              item.isLost = item.streamId === stream.streamId ? lost > 10 ? true : false : item.isLost;
+            });
+          },
+          onUserAudioVolume: (stream: VhallStream, value: number): void => {
+            console.info("用户音量：" + value);
+          },
+          onPublishStreamFailed: (code: number, msg: string): void => {
+            if(this.rePushTimer != -1){
+              return;
+            }
+            this.rePushTimer = setTimeout(()=>{
+              this.rePushTimer = -1;
+              //推流失败并且还在上麦中。3秒钟之后重新推流
+              if(this.isRTCRoom){
+                VHRtcSDK.getInstance().unPublish()
+                VHRtcSDK.getInstance().publish()
+              }
+            },3000)
+            ToastUtil.showToast("推流失败：" + code + " " + msg);
+          },
+          onUnPublishStreamFailed: (code: number, msg: string, stream_id: string): void => {
+            ToastUtil.showToast("停止推流失败：" + code + " " + msg);
+          },
+          onUnSubScribeStreamFailed: (code: number, msg: string, stream_id: string): void => {
+            ToastUtil.showToast("取消订阅远端流：" + code + " " + msg);
+          },
+          onCaptureFrame: (src: VhallCaptureFrame, dst: VhallCaptureFrame): void => {
+            let srcFrame = new VhallBeautyFrame(src.data, src.width, src.height, src.timestamp);
+            let dstFrame = new VhallBeautyFrame(dst.data, dst.width, dst.height, dst.timestamp);
+            VHBeautySDK.getInstance().renderWithInput(srcFrame, dstFrame);
+            dst.data = dstFrame.data;
+          }
+        },
+        {
+          onSuccess: (): void => {
+            // VHRtcSDK.getInstance().enterRoom();
+          },
+          onFailure: (errorCode: number, errorMsg: string): void => {
+          }
+        }
+      )
+    }
   }
 
-  aboutToDisappear(): void {
+  async aboutToDisappear(): Promise<void> {
     if (this.imConnectTimer != -1) {
       clearTimeout(this.imConnectTimer);
       this.imConnectTimer = -1;
@@ -346,6 +556,19 @@ struct WatchLivePage {
     this.VHCardDialog.close()
     this.VHEnvelopeDialog.close()
     this.VHAnnouncementDialog.close()
+    const isUserExists = this.streamList.some(item => item.userId === this.userId);
+    if (isUserExists) {
+      VHRtcSDK.getInstance().userNoSpeak(this.webinar_info?.interact?.room_id!, {
+        onSuccess: (): void => {
+        },
+        onFailure: (errorCode: number, errorMsg: string): void => {
+        }
+      });
+    };
+    //退出房间
+    VHRtcSDK.getInstance().exitRoom();
+    VHRtcSDK.getInstance().destroy();
+    this.streamList = [];
   }
 
   private initRedPacket(status:number,uuid:string){
@@ -956,7 +1179,7 @@ struct WatchLivePage {
     } else if (type == VHRoomEventType.CHAT_PERMIT) {
       this.handleChatDisableCancelPush(message)
     } else if (type == VHRoomEventType.CHAT_DISABLE_ALL) {
-      EmitterMessage.handleChatDisableAll(message);
+      this.handleChatAllUserDisable(message);
     } else if (type == VHRoomEventType.CHAT_PERMIT_ALL) {
       EmitterMessage.handleChatPermitAll(message);
     } else if (type == VHRoomEventType.PUSH_SCREEN_CARD) {
@@ -996,6 +1219,30 @@ struct WatchLivePage {
       EmitterMessage.handleChatMsgSetRecommend(message);
     } else if (type == VHRoomEventType.CHAT_MSG_DEL_RECOMMEND) { //删除推荐
       EmitterMessage.handleChatMsgDelRecommend(message);
+    }else if (type == VHRoomEventType.MESSAGE_VRTC_CONNECT_OPEN) { //开启连麦功能
+      EmitterMessage.handleConnectOpen(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_CONNECT_CLOSE) { //取消连麦功能
+      EmitterMessage.handleConnectClose(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_CONNECT_INVITE) { //邀请连麦功能
+      this.handleConnectInvite(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_CONNECT_AGREE) { //互动连麦连接同意
+      this.handleConnectAgree(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_CONNECT_INVITE_AGREE) { //互动连麦连接邀请同意
+      this.handleConnectInviteAgree(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_CONNECT_SUCCESS) { //互动连麦连接邀请同意
+      this.handleConnectSuccess(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_DISCONNECT_SUCCESS) { //互动连麦断开连接成功
+      this.handleDisConnectSuccess(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_MUTE) { //静音某路流
+      this.handleMute(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_MUTE_CANCEL) { //取消静音某路流
+      this.handleMuteCancel(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_FRAMES_FORBID) { //禁止显示某路流的画面
+      this.handleFramesForbid(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_FRAMES_DISPLAY) { //显示某路流的画面
+      this.handleFramesDisplay(message);
+    } else if (type == VHRoomEventType.MESSAGE_VRTC_BIG_SCREEN_SET) { //互动流设置混流大画面
+      this.handleBigScreenSet(message);
     }
   }
 
@@ -1190,6 +1437,15 @@ struct WatchLivePage {
   private handleChatDisablePush(message: VHIMMessageModel) {
     let disable = message.data as VHDisableMsg;
     if (disable.target_id == this.webinar_info?.join_info?.third_party_user_id) {
+      if(this.isRTCRoom){
+        //观众被禁言时需要下麦
+        VHRtcSDK.getInstance().noSpeak(this.webinar_info?.interact?.room_id!, disable.target_id, {
+          onSuccess: (data: string | object) => {
+          },
+          onFailure: (code: number, errorMsg: string) => {
+          }
+        })
+      }
       let msg = `您已被${disable.nick_name}禁言`
       this.getUIContext().getPromptAction().showToast({
         message: `您已被${disable.nick_name}禁言`,
@@ -1428,6 +1684,18 @@ struct WatchLivePage {
     this.pageInfos.pushPath(pathInfo, options);
   }
 
+  private handleChatAllUserDisable(message: VHIMMessageModel) {
+    if(this.isRTCRoom){
+      //观众被禁言时需要下麦
+      VHRtcSDK.getInstance().noSpeak(this.webinar_info?.interact?.room_id!, this.webinar_info?.join_info?.third_party_user_id!, {
+        onSuccess: (data: string | object) => {},
+        onFailure: (code: number, errorMsg: string) => {}
+      })
+      this.handleExitRoom(message);
+    }
+    EmitterMessage.handleChatDisableAll(message);
+  }
+
   private handleExam(message: VHIMMessageModel) {
     this.VHExamDialog.close()
     this.examData = message.data as VHExaminationModel
@@ -1489,6 +1757,133 @@ struct WatchLivePage {
     this.GoodsActivitySettings()
   }
 
+  private handleConnectInvite(message: VHIMMessageModel) {
+    let content =message.data as VHMsgData;
+    if (content.target_id === this.webinar_info?.join_info?.third_party_user_id){
+      EmitterMessage.handleConnectInvite(message);
+    }
+  }
+
+  private handleConnectAgree(message: VHIMMessageModel) {
+    let content =message.data as VHMsgData;
+    if (content.target_id === this.webinar_info?.join_info?.third_party_user_id){
+      EmitterMessage.handleConnectAgree(message);
+      this.isRTCRoom = true;
+    }
+  }
+
+  private handleConnectInviteAgree(message: VHIMMessageModel) {
+    let content =message.data as VHInviteData;
+    if (content.room_join_id === this.webinar_info?.join_info?.third_party_user_id) {
+      EmitterMessage.handleConnectInviteAgree(message);
+      this.isRTCRoom = true;
+    }
+  }
+
+  private handleConnectSuccess(message: VHIMMessageModel) {
+    //自己上麦需要重新加入互动房间
+    let content = message.data as VhallRtcConnectSuccessData;
+    if (content.member_info.account_id === this.webinar_info?.join_info?.third_party_user_id) {
+      VHRtcSDK.getInstance().enterRoom();
+    }
+  }
+
+  private handleDisConnectSuccess(message: VHIMMessageModel) {
+    try{
+      let content = message.data as VhallRtcConnectSuccessData;
+      if (content.member_info.account_id === this.webinar_info?.join_info?.third_party_user_id) {
+        this.handleExitRoom(message);
+      }
+      for (let i = this.streamList.length - 1; i >= 0; i--) {
+        if (content.member_info.account_id === this.streamList[i].userId) {
+          this.streamList.splice(i, 1); // 从后往前删除元素
+        }
+      }
+    }
+    catch (err){
+
+    }
+  }
+
+  private handleExitRoom(message: VHIMMessageModel){
+    EmitterMessage.handleDisConnectSuccess(message);
+    this.isRTCRoom = false;
+    //下麦之后需要退出互动房间
+    VHRtcSDK.getInstance().exitRoom();
+    this.isScreenOrMediaStream = false;
+    this.streamList = [];
+  }
+
+  private handleMute(message: VHIMMessageModel) {
+    let content =message.data as VHMsgData;
+    if (content.target_id === this.webinar_info?.join_info?.third_party_user_id) {
+      EmitterMessage.handleMute(message);
+      if(message.sender_id !== this.webinar_info?.join_info?.third_party_user_id) {
+        ToastUtil.showToast('您已被禁言');
+      }
+      this.streamList.forEach((item: VHRTCUserInfo) => {
+        if (item.userId === this.webinar_info?.join_info?.third_party_user_id) {
+          item.isMute = true;
+          return;
+        }
+      });
+    }
+  }
+
+  private handleMuteCancel(message: VHIMMessageModel) {
+    let content =message.data as VHMsgData;
+    if (content.target_id === this.webinar_info?.join_info?.third_party_user_id) {
+      EmitterMessage.handleMuteCancel(message);
+      if(message.sender_id !== this.webinar_info?.join_info?.third_party_user_id) {
+        ToastUtil.showToast('您已被取消禁言');
+      }
+      this.streamList.forEach((item: VHRTCUserInfo) => {
+        if (item.userId === this.webinar_info?.join_info?.third_party_user_id) {
+          item.isMute = false;
+          return;
+        }
+      });
+    }
+  }
+
+  private handleFramesForbid(message: VHIMMessageModel) {
+    let content =message.data as VHMsgData;
+    if (content.target_id === this.webinar_info?.join_info?.third_party_user_id) {
+      EmitterMessage.handleFramesForbid(message);
+      if(message.sender_id !== this.webinar_info?.join_info?.third_party_user_id) {
+        ToastUtil.showToast('您已被关闭摄像头');
+      }
+      this.streamList.forEach((item: VHRTCUserInfo) => {
+        if (item.userId === this.webinar_info?.join_info?.third_party_user_id) {
+          item.isCamera = false;
+          return;
+        }
+      });
+    }
+  }
+
+  private handleFramesDisplay(message: VHIMMessageModel) {
+    let content =message.data as VHMsgData;
+    if (content.target_id === this.webinar_info?.join_info?.third_party_user_id) {
+      EmitterMessage.handleFramesDisplay(message);
+      if(message.sender_id !== this.webinar_info?.join_info?.third_party_user_id) {
+        ToastUtil.showToast('您已被取消关闭摄像头');
+      }
+      this.streamList.forEach((item: VHRTCUserInfo) => {
+        if (item.userId === this.webinar_info?.join_info?.third_party_user_id) {
+          item.isCamera = true;
+          return;
+        }
+      });
+    }
+  }
+
+  private handleBigScreenSet(message: VHIMMessageModel) {
+    this.streamList.forEach((item: VHRTCUserInfo) => {
+      item.isMain = item.userId === message.sender_id;
+    });
+  }
+
   /**
    * 错误回调
    * @param im im
@@ -1538,15 +1933,25 @@ struct WatchLivePage {
       Stack() {
         Flex({ direction: FlexDirection.Column }) {
           Column() {
-            VHWatchLivePlayerComponent({
-              webinars: this.webinar_info,
-              playerConfig: this.player_config,
-              isLandscapeStart: this.isLandscapeStart,
-              openSettingBtn: this.openSettingBtn,
-              hideState:this.hideState
-            })
+            if (this.isRTCRoom) {
+              VHRTCUserComponent({
+                roomId: this.webinar_info?.interact?.room_id,
+                streamList: this.streamList,
+                userId: this.userId,
+                isScreenOrMediaStream:this.isScreenOrMediaStream,
+                webinarInfo: this.webinar_info
+              })
+            } else {
+              VHWatchLivePlayerComponent({
+                webinars: this.webinar_info,
+                playerConfig: this.player_config,
+                isLandscapeStart: this.isLandscapeStart,
+                openSettingBtn: this.openSettingBtn,
+                hideState:this.hideState
+              })
               .width('100%')
               .height('100%')
+            }
           }
           .width('100%')
           .flexShrink(0)
@@ -1821,12 +2226,18 @@ struct WatchLivePage {
     .onShown(() => {
       this.hideState = 0;
       console.log(`取消长时任务`)
-      BackgroundTaskManager.stopContinuousTask(this.getUIContext().getHostContext() as common.UIAbilityContext)
+      // BackgroundTaskManager.stopContinuousTask(this.getUIContext().getHostContext() as common.UIAbilityContext)
+      this.avSessionManager.stop();
     })
     .onHidden(() => {
       this.hideState = 1;
       console.log(`申请长时任务，避免退到后台导致消息服务中断`)
-      BackgroundTaskManager.startContinuousTask(this.getUIContext().getHostContext() as common.UIAbilityContext);
+      // BackgroundTaskManager.startContinuousTask(this.getUIContext().getHostContext() as common.UIAbilityContext);
+      this.avSessionManager.start();
+    })
+    .onWillDisappear(async () => {
+      VHBeautyDataService.getInstance().VHShapeViewModel.saveShapeDataPersistently();
+      VHBeautyDataService.getInstance().VHFilterViewModel.saveFilterDataPersistently();
     })
   }
 }

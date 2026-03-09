@@ -281,4 +281,94 @@ export class EmitterMessage {
     } as EmitterMsgData;
     EmitterUtil.send(msgData);
   }
+
+  public static handleConnectOpen(message: VHIMMessageModel) {
+    let msgData: EmitterMsgData;
+    msgData = {
+      type: VHRoomEventType.MESSAGE_VRTC_CONNECT_OPEN,
+      data: message
+    } as EmitterMsgData;
+    EmitterUtil.send(msgData);
+  }
+
+  public static handleConnectClose(message: VHIMMessageModel) {
+    let msgData: EmitterMsgData;
+    msgData = {
+      type: VHRoomEventType.MESSAGE_VRTC_CONNECT_CLOSE,
+      data: message
+    } as EmitterMsgData;
+    EmitterUtil.send(msgData);
+  }
+
+  public static handleConnectInvite(message: VHIMMessageModel) {
+    let msgData: EmitterMsgData;
+    msgData = {
+      type: VHRoomEventType.MESSAGE_VRTC_CONNECT_INVITE,
+      data: message
+    } as EmitterMsgData;
+    EmitterUtil.send(msgData);
+  }
+
+  public static handleConnectAgree(message: VHIMMessageModel) {
+    let msgData: EmitterMsgData;
+    msgData = {
+      type: VHRoomEventType.MESSAGE_VRTC_CONNECT_AGREE,
+      data: message
+    } as EmitterMsgData;
+    EmitterUtil.send(msgData);
+  }
+
+  public static handleConnectInviteAgree(message: VHIMMessageModel) {
+    let msgData: EmitterMsgData;
+    msgData = {
+      type: VHRoomEventType.MESSAGE_VRTC_CONNECT_INVITE_AGREE,
+      data: message
+    } as EmitterMsgData;
+    EmitterUtil.send(msgData);
+  }
+
+  public static handleDisConnectSuccess(message: VHIMMessageModel) {
+    let msgData: EmitterMsgData;
+    msgData = {
+      type: VHRoomEventType.MESSAGE_VRTC_DISCONNECT_SUCCESS,
+      data: message
+    } as EmitterMsgData;
+    EmitterUtil.send(msgData);
+  }
+
+  public static handleMute(message: VHIMMessageModel) {
+    let msgData: EmitterMsgData;
+    msgData = {
+      type: VHRoomEventType.MESSAGE_VRTC_MUTE,
+      data: message
+    } as EmitterMsgData;
+    EmitterUtil.send(msgData);
+  }
+
+  public static handleMuteCancel(message: VHIMMessageModel) {
+    let msgData: EmitterMsgData;
+    msgData = {
+      type: VHRoomEventType.MESSAGE_VRTC_MUTE_CANCEL,
+      data: message
+    } as EmitterMsgData;
+    EmitterUtil.send(msgData);
+  }
+
+  public static handleFramesForbid(message: VHIMMessageModel) {
+    let msgData: EmitterMsgData;
+    msgData = {
+      type: VHRoomEventType.MESSAGE_VRTC_FRAMES_FORBID,
+      data: message
+    } as EmitterMsgData;
+    EmitterUtil.send(msgData);
+  }
+
+  public static handleFramesDisplay(message: VHIMMessageModel) {
+    let msgData: EmitterMsgData;
+    msgData = {
+      type: VHRoomEventType.MESSAGE_VRTC_FRAMES_DISPLAY,
+      data: message
+    } as EmitterMsgData;
+    EmitterUtil.send(msgData);
+  }
 }

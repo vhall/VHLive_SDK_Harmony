@@ -46,6 +46,26 @@
           "when": "inuse"
         },
         "reason":"$string:write_imagevideo"
+      },
+      {
+        "name": "ohos.permission.CAMERA",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason":"$string:camera"
+      },
+      {
+        "name": "ohos.permission.MICROPHONE",
+        "usedScene": {
+          "abilities": [
+            "EntryAbility"
+          ],
+          "when": "inuse"
+        },
+        "reason":"$string:microphone"
       }
     ],
     "deviceTypes": [

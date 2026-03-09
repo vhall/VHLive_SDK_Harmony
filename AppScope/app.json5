@@ -1,6 +1,6 @@
 {
   "app": {
-    "bundleName": "com.vhall.live",
+    "bundleName": "com.vhall.vhlive",
     "vendor": "example",
     "versionCode": 1000000,
     "versionName": "1.0.0",

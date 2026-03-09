@@ -22,6 +22,8 @@
         "startWindowBackground": "$color:start_window_background",
         "exported": true,
         "backgroundModes": [
+          "audioRecording",
+          "bluetoothInteraction",
           "audioPlayback"
         ],
         "skills": [
@@ -53,6 +55,11 @@
       }
     ],
     "requestPermissions": [
+      {
+        "name": "ohos.permission.APP_TRACKING_CONSENT",
+        "reason": "$string:app_tracking", // 如果IDE提示错误，需自行在entry/src/main/resources/base/element/string.json，中添加对应信息
+        "usedScene": {}
+      },
       {
         "name": "ohos.permission.INTERNET",
         "reason": "$string:internet_permission_reason",

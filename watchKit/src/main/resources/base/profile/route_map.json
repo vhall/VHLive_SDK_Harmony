@@ -6,6 +6,21 @@
       "buildFunction": "WatchLivePageBuilder"
     },
     {
+      "name": "GuestLivePage",
+      "pageSourceFile": "src/main/ets/pages/GuestLivePage.ets",
+      "buildFunction": "GuestLivePageBuilder"
+    },
+    {
+      "name": "HostLivePage",
+      "pageSourceFile": "src/main/ets/pages/HostLivePage.ets",
+      "buildFunction": "HostLivePageBuilder"
+    },
+    {
+      "name": "VideoLivePage",
+      "pageSourceFile": "src/main/ets/pages/VideoLivePage.ets",
+      "buildFunction": "VideoLivePageBuilder"
+    },
+    {
       "name": "WatchVodPage",
       "pageSourceFile": "src/main/ets/pages/WatchVodPage.ets",
       "buildFunction": "WatchVodPagePageBuilder"
