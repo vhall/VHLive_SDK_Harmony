@@ -230,7 +230,7 @@ struct HostLivePage {
     VHRtcSDK.getInstance().destroy();
     this.streamList = [];
     this.stopLiveTimer();
-    VHSaaSDK.getInstance().getWebinarLiveEnd(this.webinar_id, "3", "0", {
+    VHSaaSDK.getInstance().liveEnd(this.webinar_id,  "0", {
       onSuccess: (data: string | object) => {
         this.isLive = false;
       },
@@ -535,7 +535,7 @@ struct HostLivePage {
             Button("开始直播")
               .backgroundColor(Color.Red)
               .onClick(() => {
-                VHSaaSDK.getInstance().getWebinarLiveStart(this.webinar_id, "3", "0", {
+                VHSaaSDK.getInstance().liveStart(this.webinar_id, "0", {
                   onSuccess: (data: string | object) => {
                     ToastUtil.showToast("开始直播成功");
                     VHRtcSDK.getInstance().publish();
@@ -550,7 +550,7 @@ struct HostLivePage {
           }else {
             Button("结束直播")
               .onClick(() => {
-                VHSaaSDK.getInstance().getWebinarLiveEnd(this.webinar_id, "3", "0", {
+                VHSaaSDK.getInstance().liveEnd(this.webinar_id, "0", {
                   onSuccess: (data: string | object) => {
                     ToastUtil.showToast("结束直播成功");
                     VHRtcSDK.getInstance().unPublish();

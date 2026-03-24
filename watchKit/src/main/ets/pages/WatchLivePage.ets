@@ -443,12 +443,21 @@ struct WatchLivePage {
             if(stream.streamType == VhallStreamType.VHStreamType_Desktop || stream.streamType == VhallStreamType.VHStreamType_MediaFile
               || stream.streamType == VhallStreamType.VHStreamType_SoftWare){
               this.isScreenOrMediaStream = true;
+              if (this.isRTCRoom && stream.streamType == VhallStreamType.VHStreamType_MediaFile) {
+                //业务上如果有人插播视频，需要关闭自己的麦克风，避免观看端声音与插播文件混音
+                VHRtcSDK.getInstance().muteLocalAudio(true)
+              }
             }
+
           },
           onRemoteStreamRemoved: (stream: VhallStream): void => {
             if(stream.streamType == VhallStreamType.VHStreamType_Desktop || stream.streamType == VhallStreamType.VHStreamType_MediaFile
               || stream.streamType == VhallStreamType.VHStreamType_SoftWare){
               this.isScreenOrMediaStream = false;
+              //结束插播时需要开启自己的麦克风
+              if (this.isRTCRoom && stream.streamType == VhallStreamType.VHStreamType_MediaFile) {
+                VHRtcSDK.getInstance().muteLocalAudio(false)
+              }
             }
             for (let i = this.streamList.length - 1; i >= 0; i--) {
               try {
@@ -1137,10 +1146,11 @@ struct WatchLivePage {
       EmitterMessage.handleGiftMsg(message);
     } else if (type == VHRoomEventType.ROOM_ANNOUNCEMENT ||
       type == VHRoomEventType.DEL_ROOM_ANNOUNCEMENT) {
+      //公告消息处理
       this.handleAnnouncementMsg(message);
     } else if (type == VHRoomEventType.QUESTION_ANSWER_OPEN ||
       type == VHRoomEventType.QUESTION_ANSWER_CLOSE) {
-      // 开启及关闭问答
+      // 问答开启及关闭问答
       this.handleQuestionAnswerOpenClose(type, message);
     } else if (type === VHRoomEventType.QUESTION_ANSWER_CREATE ||
       type === VHRoomEventType.QUESTION_ANSWER_COMMIT ||
@@ -1150,7 +1160,7 @@ struct WatchLivePage {
       type === VHRoomEventType.QUESTION_ANSWER_SET ||
       type === VHRoomEventType.QUESTION_ANSWER_LIKE ||
       type === VHRoomEventType.QUESTION_ANSWER_RECOMMEND) {
-      // 支持人问答处理
+      // 主持人操作问答消息处理
       this.handleQuestionAnswer(type, message);
     } else if (type === VHRoomEventType.TIMER_START ||
       type === VHRoomEventType.TIMER_RESUME ||
@@ -1162,31 +1172,31 @@ struct WatchLivePage {
       this.handleSignInPush(message)
     } else if (type == VHRoomEventType.SIGN_END) { //签到结束
       this.handleSignInEnd(message)
-    } else if (type == VHRoomEventType.LIVE_OVER) {
+    } else if (type == VHRoomEventType.LIVE_OVER) {//直播结束
       this.handleLiveOver(message);
-    } else if (type == VHRoomEventType.BASE_NUM_UPDATE) {
+    } else if (type == VHRoomEventType.BASE_NUM_UPDATE) {//更新虚拟人数
       EmitterMessage.handleBaseUpdateMsg(message);
-    } else if (type == VHRoomEventType.LOTTERY_PUSH) {
+    } else if (type == VHRoomEventType.LOTTERY_PUSH) {//抽奖推送
       this.handleLotteryPush(message);
-    } else if (type == VHRoomEventType.LOTTERY_RESULT_NOTICE) {
+    } else if (type == VHRoomEventType.LOTTERY_RESULT_NOTICE) {//抽奖结果
       this.handleLotteryResultNotice(message);
-    } else if (type == VHRoomEventType.QUESTIONNAIRE_PUSH) {
+    } else if (type == VHRoomEventType.QUESTIONNAIRE_PUSH) {//问卷推送
       this.handleQuestionnairePush(message)
-    } else if (type == VHRoomEventType.ROOM_KICK_OUT) {
+    } else if (type == VHRoomEventType.ROOM_KICK_OUT) {//踢人
       this.handleKickOutPush(message)
-    } else if (type == VHRoomEventType.CHAT_DISABLE) {
+    } else if (type == VHRoomEventType.CHAT_DISABLE) {//禁言
       this.handleChatDisablePush(message)
-    } else if (type == VHRoomEventType.CHAT_PERMIT) {
+    } else if (type == VHRoomEventType.CHAT_PERMIT) {//解禁
       this.handleChatDisableCancelPush(message)
-    } else if (type == VHRoomEventType.CHAT_DISABLE_ALL) {
+    } else if (type == VHRoomEventType.CHAT_DISABLE_ALL) {//全员禁言
       this.handleChatAllUserDisable(message);
-    } else if (type == VHRoomEventType.CHAT_PERMIT_ALL) {
+    } else if (type == VHRoomEventType.CHAT_PERMIT_ALL) {//全员解禁
       EmitterMessage.handleChatPermitAll(message);
-    } else if (type == VHRoomEventType.PUSH_SCREEN_CARD) {
+    } else if (type == VHRoomEventType.PUSH_SCREEN_CARD) {//推送屏幕卡
       PromptActionClass.closeDialog();
       this.handlePushCardMsg(message);
       this.CardListHttp()
-    } else if (type == VHRoomEventType.PUSH_SCREEN_CARD_DELETE) {
+    } else if (type == VHRoomEventType.PUSH_SCREEN_CARD_DELETE) {//删除屏幕卡
       this.CardListHttp()
     } else if (type == VHRoomEventType.PAPER_SEND) { //推送快问快答
       this.handleExam(message)
@@ -1200,16 +1210,15 @@ struct WatchLivePage {
       this.handleWatchGiftEnd(message)
     } else if (type == VHRoomEventType.PUSH_INTERACT_REWARD_WINNING_NOTICE) { //互动有礼中奖推送消息
       this.handleInteractRewardWinning(message)
-    } else if (type == VHRoomEventType.PUSH_PWD_RED_ENVELOPE_OK) {
+    } else if (type == VHRoomEventType.PUSH_PWD_RED_ENVELOPE_OK) {//密码红包中奖
       this.handlePasswordPack(message)
-    } else if (type == VHRoomEventType.PUSH_GOODS_CHANGE) {
+    } else if (type == VHRoomEventType.PUSH_GOODS_CHANGE) {//商品更新
       this.handleGoods(type, message);
     } else if (type == VHRoomEventType.IM_BANNED_MODE_UPDATE) { //禁言感知状态
       this.handleBannedModeUpdate(message);
     } else if (type == VHRoomEventType.IM_CHAT_NICK_NAME_ENCRYPTION) { //聊天昵称加密
       this.handleChatNicknameEncryption(message);
-    } else if (type == VHRoomEventType.CHAT_DELETE) {
-    } else if (type == VHRoomEventType.IM_BANNED_MODE_UPDATE) { //禁言感知状态
+    }  else if (type == VHRoomEventType.IM_BANNED_MODE_UPDATE) { //禁言感知状态
       this.handleBannedModeUpdate(message);
     } else if (type == VHRoomEventType.IM_CHAT_NICK_NAME_ENCRYPTION) { //聊天昵称加密
       this.handleChatNicknameEncryption(message);
@@ -1243,6 +1252,9 @@ struct WatchLivePage {
       this.handleFramesDisplay(message);
     } else if (type == VHRoomEventType.MESSAGE_VRTC_BIG_SCREEN_SET) { //互动流设置混流大画面
       this.handleBigScreenSet(message);
+    } else if(type == VHRoomEventType.MESSAGE_VRTC_CONNECT_REFUSED){
+      //主持拒绝用户连麦
+      this.handleRefusedSpeak(message);
     }
   }
 
@@ -1748,6 +1760,7 @@ struct WatchLivePage {
   private handleGoods(type: string, message: VHIMMessageModel) {
     this.GoodsList = message.data as VHPushGoodsChangeData
     if(this.GoodsList.cdn_url.length > 0){
+      //更新商品列表
       this.GoodsInfoHttp(this.GoodsList.cdn_url)
     }
     //建议当cdn_url不为空时，获取商品列表也使用getGoodsInfoFromUrl进行获取。
@@ -1884,6 +1897,20 @@ struct WatchLivePage {
     });
   }
 
+  private handleRefusedSpeak(message: VHIMMessageModel) {
+    let content = message.data as VHMsgData;
+    if(content.target_id === this.webinar_info?.join_info?.third_party_user_id){
+      ToastUtil.showToast('主持人拒绝了您的上麦申请');
+      let msgData: EmitterMsgData;
+      msgData = {
+        type: VHRoomEventType.MESSAGE_VRTC_CONNECT_REFUSED,
+        data: message
+      } as EmitterMsgData;
+      EmitterUtil.send(msgData);
+    }
+  }
+
+
   /**
    * 错误回调
    * @param im im
@@ -1925,7 +1952,7 @@ struct WatchLivePage {
    * 消息服务连接正在重新链接
    * */
   onVHNetworkConnecting(): void {
-    ToastUtil.showToast("网络异常，正在重连")
+    ToastUtil.showToast("网络异常，正在重连消息服务")
   }
 
   build() {

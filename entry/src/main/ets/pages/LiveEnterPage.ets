@@ -367,10 +367,18 @@ struct LiveEnterPage {
             param['nick_name'] = this.nick_name;
             this.pageInfos.pushPath({ name: 'HostLivePage', param: param }, true);
           })
-          Button('视频直播').onClick(() => {
+          Button('视频直播V1').onClick(() => {
             let param: object = new Object();
             param['webinar_id'] = this.webinar_id;
             param['nick_name'] = this.nick_name;
+            param['version'] = 1;
+            this.pageInfos.pushPath({ name: 'VideoLivePage', param: param }, true);
+          })
+          Button('视频直播V2').onClick(() => {
+            let param: object = new Object();
+            param['webinar_id'] = this.webinar_id;
+            param['nick_name'] = this.nick_name;
+            param['version'] = 2;
             this.pageInfos.pushPath({ name: 'VideoLivePage', param: param }, true);
           })
         }

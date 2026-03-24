@@ -184,6 +184,7 @@ export struct ChatComponent {
     this.subscribeConnectClose();
     this.subscribeConnectInvite();
     this.subscribeConnectAgree();
+    this.subscribeConnectRefuse();
     this.subscribeConnectInviteAgree();
     this.subscribeDisConnectSuccess();
     this.subscribeMute();
@@ -487,6 +488,13 @@ export struct ChatComponent {
   subscribeConnectInvite() {
     EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_INVITE, (msgData: EmitterMsgData) => {
       this.dialogController.open();
+    });
+  }
+
+  //拒绝上麦申请
+  subscribeConnectRefuse() {
+    EmitterUtil.subscribe(VHRoomEventType.MESSAGE_VRTC_CONNECT_REFUSED, (msgData: EmitterMsgData) => {
+      this.stopCountdown();
     });
   }
 

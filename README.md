@@ -8,6 +8,7 @@
 
 |   版本号   |     日期     |     更新说明      |
 |:-------:|:----------:|:-------------:| 
+| v1.2.0  | 2016-03-24 |   1:优化已知问题    |  
 | v1.1.0  | 2016-03-09 |  1:新增互动连麦能力   |  
 | v1.0.16 | 2016-01-26 | 1:优化直播文档开启状态  |  
 | v1.0.14 | 2015-12-23 |   1:优化初始化接口   |  
@@ -18,8 +19,11 @@
 ### 3 集成方式
 
 参考文档<br>
-1：开发文档 https://developer.vhall.com/7504802m0<br>
-2：下载安装 ohpm install @vhall/vhall_live
+1：开发文档  https://vhall.apifox.cn/5493385m0<br>
+2：基础模块 ohpm install @vhall/vhall_live<br>
+3：互动连麦 ohpm install @vhall/vhall_rtc<br>
+4：直播推流 ohpm install @vhall/vhall_pusher<br>
+5：美颜    ohpm install @vhall/vhall_beauty<br>
 
 ```
 |-- entry
@@ -38,6 +42,9 @@
     |   |   |        `-- CardBuilder.ets (推屏卡片弹窗)]
     |   |   |        `-- WatchGiftBuilder.ets (观看有礼示例)]    
     |   |   |   |-- components 
+        |   |   |-- `-- rtc (互动连麦组件)]
+    |   |   |   |        `-- VHRTCUserComponent.ets (渲染组件)]
+    |   |   |   |        `-- VHRTCUserInfo.ets (用户信息组件)]
     |   |   |   |-- `-- adv (广告组件)]
     |   |   |   |-- `-- chat (聊天组件)]
     |   |   |   |        `-- ChatComponent.ets (聊天组件示例)]
@@ -59,11 +66,12 @@
     |   |   |   |        `-- VHPlayerWaterMark.ets (播放器水印示例)]
     |   |   |   |-- `-- timer (计时器)]                        
     |   |   |   |-- pages 
-    |   |   |   |-- `-- WatchLivePage.ets (直播观看页)]
+    |   |   |   |-- `-- WatchLivePage.ets (直播观看页+互动连麦示例)]
     |   |   |   |-- `-- WatchVodPage.ets (回放观看页)]
     |   |   |   |-- `-- StartPage.ets (观看验证-密码验证)]
     |   |   |   |-- `-- ReservationPage.ets (预约页面)]
     |   |   |   |-- `-- ExamPage.ets (快问快答嵌入页面)]
+    |   |   |   |-- `-- VideoLive.ets (视频直播推流 页)]
 
 
 

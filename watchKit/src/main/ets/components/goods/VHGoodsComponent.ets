@@ -1199,13 +1199,15 @@ export struct VHOrderDialog {
                   const phone: string = this.phone.length > 0 ? this.phone : ''
                   const remark: string = this.remark.length > 0 ? this.remark : ''
                   VHSaaSDK.getInstance().goodsOrderCreate(
+                    this.webinars?.switch_info?.switch_id!.toString()!,
+                    this.webinars.join_info?.third_party_user_id!,
                     finalPrice.toString(), this.pay,
                     {
                       "goods_id": this.GoodsData.goods_id,
                       "quantity": this.value,
                       "buy_type": this.GoodsData.buy_type
                     },
-                    couponIds, username, phone, remark, this.webinars.webinar?.id.toString() as string,
+                    couponIds,"","", username, phone, remark, this.webinars.webinar?.id.toString() as string,
                     {
                       onSucceed: (data: VHCreateOrderInfo) => {
                         if (this.pay === 'WEIXIN') {//微信直播

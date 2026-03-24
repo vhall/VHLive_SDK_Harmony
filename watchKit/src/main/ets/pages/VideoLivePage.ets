@@ -15,9 +15,13 @@ import { window } from "@kit.ArkUI";
 import { BusinessError } from "@kit.BasicServicesKit";
 import { BeautyComponent } from "../components/beauty/BeautyComponent";
 import { DefaultRecordDialog } from "../components/recoed/VHRecordComponent";
-import { VhallPusherResolution, VhallXComponentView, VHPusherSDK } from "@vhall/vhall_pusher";
+import { VhallMediaCaptureFrame,
+  VhallMediaPusherCode,
+  VhallPusherResolution, VhallXComponentView, VHPusherSDK } from "@vhall/vhall_pusher";
 import { VHPusherUserInfo } from "../components/pusher/VHPusherUserInfo";
 import { image } from "@kit.ImageKit";
+import { VhallBeautyFrame, VHBeautySDK } from "@vhall/vhall_beauty";
+import { WindowUtil } from "../utils/WindowUtil";
 
 const RECONNECT_TIMEOUT: number = 3000;
 
@@ -25,7 +29,8 @@ const RECONNECT_TIMEOUT: number = 3000;
 export function VideoLivePageBuilder(name: string, param: object) {
   VideoLivePage({
     nick_name: param['nick_name'],
-    webinar_id: param['webinar_id']
+    webinar_id: param['webinar_id'],
+    version:param['version']
   })
 }
 
@@ -40,6 +45,7 @@ struct VideoLivePage {
   private webinar_info?: VHWebinarData;
   @State webinar_id: string = '';
   @State nick_name: string = '';
+  @State version:number = 1;
   private imBase?: VHIMServer;
   private imConnectTimer: number = -1;
   @State hideState: number = 0;
@@ -55,6 +61,7 @@ struct VideoLivePage {
   @State isFront: boolean = true;
   @State isMirror: boolean = true;
   @State selectHDIndex: number = 2;
+  @State bitRate:string = '';
   @State screenSnap: PixelMap | null = null;
   pageInfos: NavPathStack = new NavPathStack() // 导航
   private avSessionManager = new AVSessionManager();
@@ -65,10 +72,8 @@ struct VideoLivePage {
 
   onVHXComponentLoad(xComponentId: string, obj: object){
     this.streamList.forEach(item => {
-      if(item.mainVideoViewID === xComponentId) {
-        item.controller = obj;
-        item.updateRenderParams(obj);
-      }
+      item.controller = obj;
+      item.updateRenderParams(obj);
     });
   }
 
@@ -82,12 +87,12 @@ struct VideoLivePage {
   }
 
   // 启动直播计时器
-  private startLiveTimer(): void {
+  private startLiveTimer(startTime:number): void {
     if (this.liveTimer !== -1) {
       clearInterval(this.liveTimer);
     }
 
-    this.liveDuration = 0;
+    this.liveDuration = startTime;
     this.liveTimer = setInterval(() => {
       this.liveDuration += 1;
     }, 1000); // 每秒更新一次
@@ -100,6 +105,12 @@ struct VideoLivePage {
       this.liveTimer = -1;
     }
   }
+  //美颜弹窗
+  VHBeautyDialog = new CustomDialogController({
+    builder: BeautyComponent(),
+    customStyle: true,
+    alignment: DialogAlignment.Bottom
+  })
 
   //清晰度弹窗
   VHHDDialog = new CustomDialogController({
@@ -122,6 +133,12 @@ struct VideoLivePage {
 
   getUpdatedTool(): ITopTool[] {
     return [
+      {
+        icon: $r("app.media.icon_beauty_open"),
+        onClick: () => {
+          this.VHBeautyDialog.open();
+        }
+      },
       {
         icon: $r("app.media.icon_HD"),
         onClick: () => {
@@ -174,6 +191,8 @@ struct VideoLivePage {
   }
 
   aboutToAppear() {
+    WindowUtil.setWindowKeepScreenOn(true);
+
     window.getLastWindow(this.getUIContext().getHostContext()!, (err: BusinessError, windowClass) => {
       if (err.code) {
         console.error(`Failed to obtain the top window. Cause code: ${err.code}, message: ${err.message}`);
@@ -203,9 +222,18 @@ struct VideoLivePage {
         const context = this.getUIContext().getHostContext();
         if(this.webinar_info && context) {
           this.userId = this.webinar_info?.join_info?.third_party_user_id!;
+          VHBeautySDK.getInstance().init(this.webinar_info?.webinar?.id.toString()!,
+            this.webinar_info?.webinar?.userinfo.user_id.toString()!,{
+              onSucceed: (data: number) => {
+                ToastUtil.showToast("美颜SDK初始化成功");
+              },
+              onFailure: (errorCode: number, errorMsg: string) => {
+                ToastUtil.showToast("美颜SDK初始化失败");
+              }
+            });
           VHPusherSDK.getInstance().init(
             context,
-            2,
+            this.version,
             null,
             null,
             this.webinar_info,
@@ -215,17 +243,37 @@ struct VideoLivePage {
               },
               onPushDisconnect: (): void => {
                 ToastUtil.showToast("已断开");
+                setTimeout(()=>{
+                  VHPusherSDK.getInstance().unPublish();
+                  VHPusherSDK.getInstance().publish();
+                },2000)
               },
               onReConnecting: (): void => {
                 ToastUtil.showToast("正在重连");
               },
               onError: (errCode: number, errMsg: string): void => {
                 ToastUtil.showToast(errMsg);
+                if(errCode == VhallMediaPusherCode.ERROR_PUBLISH_CONNECT || errCode == VhallMediaPusherCode.ERROR_MUXER_EMPTY){
+                  setTimeout(()=>{
+                    VHPusherSDK.getInstance().unPublish();
+                    VHPusherSDK.getInstance().publish();
+                  },2000)
+                }
               },
               onWarning: (warningCode: number, warningMsg: string): void => {
                 ToastUtil.showToast(warningMsg);
               },
               onMicrophoneVolumeUpdate: (volume: number): void => {
+              },
+              onPushStreamBitrate: (bitrate: number): void => {
+                console.info("bitrate: " + bitrate);
+                this.bitRate = Number(bitrate).toString();
+              },
+              onCaptureFrame: (src: VhallMediaCaptureFrame, dst: VhallMediaCaptureFrame): void => {
+                let srcFrame = new VhallBeautyFrame(src.data, src.width, src.height, src.timestamp);
+                let dstFrame = new VhallBeautyFrame(dst.data, dst.width, dst.height, dst.timestamp);
+                VHBeautySDK.getInstance().renderWithInput(srcFrame, dstFrame);
+                dst.data = dstFrame.data;
               }
             },
             {
@@ -240,6 +288,12 @@ struct VideoLivePage {
                 this.isHost = true;
                 this.init();
                 this.getUserListInfo();
+                if(this.webinar_info?.webinar?.type === 1){
+                  VHPusherSDK.getInstance().publish();
+                  this.isLiveStart = true;
+                  // 开始计时器
+                  this.startLiveTimer(this.webinar_info?.webinar?.live_time);
+                }
               },
               onFailure: (errorCode: number, errorMsg: string): void => {
               }
@@ -275,12 +329,14 @@ struct VideoLivePage {
     this.imBase?.leave();
     VHPusherSDK.getInstance().destroy();
     this.streamList = [];
-    VHSaaSDK.getInstance().getWebinarLiveEnd(this.webinar_id, "3", "0", {
+    VHSaaSDK.getInstance().liveEnd(this.webinar_id, "0", {
       onSuccess: (data: string | object) => {
       },
       onFailure: (code: number, errorMsg: string) => {
       }
     });
+
+    WindowUtil.setWindowKeepScreenOn(false);
   }
 
   /**
@@ -334,6 +390,7 @@ struct VideoLivePage {
    * 消息服务连接成功
    * */
   onVHNetworkConnect(): void {
+    ToastUtil.showToast("消息服务链接成功")
     if (this.imConnectTimer != -1) {
       clearTimeout(this.imConnectTimer);
       this.imConnectTimer = -1;
@@ -371,9 +428,9 @@ struct VideoLivePage {
     let request = await atManager.requestPermissionsFromUser(context, ['ohos.permission.CAMERA', 'ohos.permission.MICROPHONE']);
     if (request.authResults[0] === abilityAccessCtrl.GrantStatus.PERMISSION_GRANTED) {
       VHPusherSDK.getInstance().setVideoEncode(VhallPusherResolution.VhallPusherResolution1280x720);
+      VHPusherSDK.getInstance().enableCustomDataProcess(true);
       VHPusherSDK.getInstance().createLocalStream(true);
       VHPusherSDK.getInstance().muteLocalAudio(false);
-      VHPusherSDK.getInstance().muteLocalVideo(false);
       VHPusherSDK.getInstance().switchCamera(true);
       VHPusherSDK.getInstance().setMirrorType(true);
     } else {
@@ -415,6 +472,14 @@ struct VideoLivePage {
         .justifyContent(FlexAlign.Center)
         .id("localVideo")
         .position({bottom:this.isVideoMute ? 0 : -999})
+
+        Row(){
+          Text(this.bitRate + "kbps")
+        }
+        .width(100)
+        .zIndex(0)
+        .justifyContent(FlexAlign.Center)
+
         Row(){
           if (this.isLiveStart) {
             Column({space: 5}){
@@ -444,13 +509,15 @@ struct VideoLivePage {
           }
           Row({space: 5}){
             ForEach(this.getUpdatedTool(), (item: ITopTool, index) => {
-              Image(item.icon)
-                .width(30)
-                .backgroundColor("rgba(128, 128, 128, 0.2)")
-                .borderRadius(15)
-                .onClick(() => {
-                  item.onClick();
-                })
+              if(index !== 1 || !this.isLiveStart) {
+                Image(item.icon)
+                  .width(30)
+                  .backgroundColor("rgba(128, 128, 128, 0.2)")
+                  .borderRadius(15)
+                  .onClick(() => {
+                    item.onClick();
+                  })
+              }
             })
             Image($r("app.media.icon_close"))
               .fillColor(Color.White)
@@ -485,13 +552,13 @@ struct VideoLivePage {
               .fontSize(16)
               .backgroundColor(Color.Red)
               .onClick(() => {
-                VHSaaSDK.getInstance().getWebinarLiveStart(this.webinar_id, "3", "0", {
+                VHSaaSDK.getInstance().liveStart(this.webinar_id,  "0", {
                   onSuccess: (data: string | object) => {
                     ToastUtil.showToast("开始直播成功");
                     VHPusherSDK.getInstance().publish();
                     this.isLiveStart = true;
                     // 开始计时器
-                    this.startLiveTimer();
+                    this.startLiveTimer(0);
                   },
                   onFailure: (code: number, errorMsg: string) => {
                     console.info("开始直播失败：" + code + " " + errorMsg);

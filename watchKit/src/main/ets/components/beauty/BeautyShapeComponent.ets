@@ -71,9 +71,9 @@ export struct BeautyShapeComponent {
                 this.viewModel.isOpen = this.isOpen;
                 if (this.isOpen) {
                   this.gridCurrentIndex = 0;
-                  this.viewModel.setAllShapeValues();
+                  this.viewModel.openBeauty();
                 } else {
-                  this.viewModel.resetToDefault();
+                  this.viewModel.closeBeauty();
                 }
               })
           }

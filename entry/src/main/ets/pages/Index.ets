@@ -22,7 +22,7 @@ struct Index {
   @State thirdPartyPwd: string = '' // 三方登录密码
   @State roleId: string = '' // 口令登录ID
   @State rolePwd: string = '' // 口令登录密码
-  @State roleType: string = '1' // 口令登录类型 角色（1-主持人，2-嘉宾）
+  @State roleType: string = '' // 口令登录类型 角色（1-主持人，2-嘉宾）
   @State webinar_id: string = '' // 活动ID
   @State visitor_id: string = ''
   @State thirdPartyNickName: string = '' // 昵称
@@ -36,10 +36,10 @@ struct Index {
    @State app_key: string = '';
    @State app_secret_key: string = '';
    @State sign: string = '';
-   @State package: string = 'com.vhall.vhlive';
+   @State package: string = '';
 
   //私钥
-//  priKeyStr: string = "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDL1AOACSzvVp6R4lzgvsgVJLQT5b84pCcFVFylgRKaM1Uk9u1C0IzgJ2Zo7g0kHfm6gCHrz33NdBqGsIswNXJtydR3HyI1y+vwjK/WeIdQfrnnQmLbohSoPsHp6g35Md+g07Cdo9C1zF/uIjJfKmpNSBhNRK8h7u66AQRWWwTltVVeZgph7Iwy0xgiNCe+KOiYKbHA0fUN5mFJDA+ag8hDxjYjt7qbOn2YyFsFGsJ5eSa3N9i9zjypJnbxfX2YwJDcVzugj+ngAdpUuMahvkSEMdWUbOq5z/c5aZyMT1X+zUpf3EMXMCjR4NQg6C83JjgnLWWS4Em6xJtV/Kj6LtTBAgMBAAECggEAHYZhWBS8LBJ4LLnv6eQ+IltAidilSYSfBwrF0s7ZYs8dvcQrm8U5gCdk570tLSFPG8tUs+Od8vqm9FddX3HWg1MRkjcceFNzd/2WY52Y6DmQdJBtYSg0utGVuuxFnZEHtjRZKIniq9A7cx4D/ZICIkitBdWgUsIuqsXb8CWwwL8wTYJ3S+6hLtSKuAOJDbiGOdXOdwKYga1w47Z6X6ybvdUC09Ssu+SnXMTVov2hfEFoGgYZUEisLsy9utCs+XMgVQXCq/LZ92k+LynyrlJaCaGTkt87zWjh5w1L8Na0lrkUo4eudcqgBCcPX2n/cuQrX4H/seWWRKxhfpde9RsICwKBgQDQrwYp50KwfjzQWO0tNHUVMl0r4AOMhzU9/hcc2ivUy8xF92PTdJiZUO7ZXira7AP0LJXsUXrfdMrxXTGIoz9mNeidxbpoNo5oKufUTSHsL/BIGCZVpnB9WvySRkDLIEWRWExKFkiTb32pPFu19ntOTkyGgh14baZhOvI/QqqBdwKBgQD6Cyc0+k7lbrk7hhrtN+j/Joi0+d7JIbdf1okvzMxWXvHBAzZdFEjXL5Z0xWzBvBhhtVHq4nxClIAld9zgoI54undFr5L+yP3vifHVD09LuP3o9m1HiIsGAOAG0FMwNXwDkTN8ZTSIrO0LH0NrfTNJSEN6let3LQBKEhmvDtuphwKBgQCxnYZ9e9wDJC7WlhmodBGDLQ6oHU5n+VyTmwRJBlhwEdWXZ2yLuZ14QK5KTB/lnSPwW1JvhRozvtBMhql2Rpvbft6yCm0R7f1fI8WVqODKijLU6dkW5UaxKxP1292iBaGwh5rHJBg5hJdLx5e3VEa262WuxmgW7BzEfMtalH9TGQKBgQColUB37ZOoCMEGquIYsit7a+Wb7yQQA5V5HlIcUj4qtZTVh27tzrFVtBYC4OD0tfbSWcfDT7Rrx2em22umX1nvd/jWmQvIkIb1K9JKzimuail3Gj6PjjX9dDWXInoT9NuKJCnMYwfKZpzjdM6l+CHN9NTaH55EGakqR43dg20CnQKBgHY72yo1f4n24F8Gk6LvL13lTVdoXYgcFmhCJIbsEkgSBUON8z7KanU2a5989WqAwUnjiq4Y8mPQgghvALFCOrsq4Na9xwfHH81HTBOshxh+54E0asQ0dIpkfTpIk2hV5gbIy4eRxB/7HiXhN269B2BdHQ3MptlcaEv4O24DgeDH";
+  // priKeyStr: string = "MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDL1AOACSzvVp6R4lzgvsgVJLQT5b84pCcFVFylgRKaM1Uk9u1C0IzgJ2Zo7g0kHfm6gCHrz33NdBqGsIswNXJtydR3HyI1y+vwjK/WeIdQfrnnQmLbohSoPsHp6g35Md+g07Cdo9C1zF/uIjJfKmpNSBhNRK8h7u66AQRWWwTltVVeZgph7Iwy0xgiNCe+KOiYKbHA0fUN5mFJDA+ag8hDxjYjt7qbOn2YyFsFGsJ5eSa3N9i9zjypJnbxfX2YwJDcVzugj+ngAdpUuMahvkSEMdWUbOq5z/c5aZyMT1X+zUpf3EMXMCjR4NQg6C83JjgnLWWS4Em6xJtV/Kj6LtTBAgMBAAECggEAHYZhWBS8LBJ4LLnv6eQ+IltAidilSYSfBwrF0s7ZYs8dvcQrm8U5gCdk570tLSFPG8tUs+Od8vqm9FddX3HWg1MRkjcceFNzd/2WY52Y6DmQdJBtYSg0utGVuuxFnZEHtjRZKIniq9A7cx4D/ZICIkitBdWgUsIuqsXb8CWwwL8wTYJ3S+6hLtSKuAOJDbiGOdXOdwKYga1w47Z6X6ybvdUC09Ssu+SnXMTVov2hfEFoGgYZUEisLsy9utCs+XMgVQXCq/LZ92k+LynyrlJaCaGTkt87zWjh5w1L8Na0lrkUo4eudcqgBCcPX2n/cuQrX4H/seWWRKxhfpde9RsICwKBgQDQrwYp50KwfjzQWO0tNHUVMl0r4AOMhzU9/hcc2ivUy8xF92PTdJiZUO7ZXira7AP0LJXsUXrfdMrxXTGIoz9mNeidxbpoNo5oKufUTSHsL/BIGCZVpnB9WvySRkDLIEWRWExKFkiTb32pPFu19ntOTkyGgh14baZhOvI/QqqBdwKBgQD6Cyc0+k7lbrk7hhrtN+j/Joi0+d7JIbdf1okvzMxWXvHBAzZdFEjXL5Z0xWzBvBhhtVHq4nxClIAld9zgoI54undFr5L+yP3vifHVD09LuP3o9m1HiIsGAOAG0FMwNXwDkTN8ZTSIrO0LH0NrfTNJSEN6let3LQBKEhmvDtuphwKBgQCxnYZ9e9wDJC7WlhmodBGDLQ6oHU5n+VyTmwRJBlhwEdWXZ2yLuZ14QK5KTB/lnSPwW1JvhRozvtBMhql2Rpvbft6yCm0R7f1fI8WVqODKijLU6dkW5UaxKxP1292iBaGwh5rHJBg5hJdLx5e3VEa262WuxmgW7BzEfMtalH9TGQKBgQColUB37ZOoCMEGquIYsit7a+Wb7yQQA5V5HlIcUj4qtZTVh27tzrFVtBYC4OD0tfbSWcfDT7Rrx2em22umX1nvd/jWmQvIkIb1K9JKzimuail3Gj6PjjX9dDWXInoT9NuKJCnMYwfKZpzjdM6l+CHN9NTaH55EGakqR43dg20CnQKBgHY72yo1f4n24F8Gk6LvL13lTVdoXYgcFmhCJIbsEkgSBUON8z7KanU2a5989WqAwUnjiq4Y8mPQgghvALFCOrsq4Na9xwfHH81HTBOshxh+54E0asQ0dIpkfTpIk2hV5gbIy4eRxB/7HiXhN269B2BdHQ3MptlcaEv4O24DgeDH";
   private isUserLogin: boolean = true;
   pathStack: NavPathStack = new NavPathStack();
 
@@ -47,8 +47,6 @@ struct Index {
     bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION).then((bundleInfo) => {
       this.version = bundleInfo.versionName
     })
-
-
 
     let options: preferences.Options = { name: 'room' };
     this.dataPreferences = preferences.getPreferencesSync(this.getUIContext().getHostContext()?.getApplicationContext(), options);
@@ -61,7 +59,7 @@ struct Index {
       this.package = BUNDLE_NAME;
     }
 
-    VHSaaSDK.getInstance().setEnv(false);
+
     //VHSaaSDK.getInstance().setRSAPrivateKey(this.priKeyStr);
 
     VHSaaSDK.getInstance().getVersion();
@@ -84,24 +82,6 @@ struct Index {
     Navigation(this.pathStack) {
       Flex({ direction: FlexDirection.Column }) {
         Row({ space: 20 }) {
-
-          Text("测试环境")
-          Toggle({ type: ToggleType.Switch, isOn: this.envApp == "1" ? true : false })
-            .onChange((isOn: boolean) => {
-              if(isOn) {
-                VHSaaSDK.getInstance().setEnv(true);
-                this.dataPreferences?.putSync("evn", "1");
-                this.dataPreferences?.flushSync();
-              }
-              else{
-                VHSaaSDK.getInstance().setEnv(false);
-                this.dataPreferences?.putSync("env", "0") ;
-                this.dataPreferences?.flushSync();
-              }
-              let context = getContext() as common.UIAbilityContext;
-              // context.terminateSelf();
-            })
-
           Button('签名设置', { type: ButtonType.Normal, stateEffect: true })
             .onClick(() => {
               console.info('Button onClick')
