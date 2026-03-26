@@ -8,8 +8,8 @@
   "dependencies": {
     "libwatchkit.so": "file:./src/main/cpp/types/libwatchkit",
     "@vhall/vhall_live": "1.2.0",
-    "@vhall/vhall_rtc": "1.2.0",
-    "@vhall/vhall_pusher": "1.2.0",
+    "@vhall/vhall_rtc": "1.2.2",
+    "@vhall/vhall_pusher": "1.2.2",
     "@vhall/vhall_beauty": "1.2.0",
     "@ohos/danmakuflamemaster": "2.0.1",
     "@esky/barrage": "1.0.6"

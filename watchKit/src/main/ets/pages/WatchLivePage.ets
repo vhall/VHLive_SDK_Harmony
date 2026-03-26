@@ -898,6 +898,7 @@ struct WatchLivePage {
     VHSaaSDK.getInstance().getGoodsInfoFromUrl(url,
       {
         onSuccess: (data:VHGoodsInfo[]) => {
+          this.GoodsListData = data.filter(item => item.status === 1);
           this.PushProductData = data
           this.dataPreferences?.putSync('isPushProductData', this.PushProductData);
           this.dataPreferences?.flushSync();
@@ -1762,9 +1763,11 @@ struct WatchLivePage {
     if(this.GoodsList.cdn_url.length > 0){
       //更新商品列表
       this.GoodsInfoHttp(this.GoodsList.cdn_url)
+    }else{
+      //建议当cdn_url不为空时，获取商品列表也使用getGoodsInfoFromUrl进行获取。
+      this.GoodsListHttp()
     }
-    //建议当cdn_url不为空时，获取商品列表也使用getGoodsInfoFromUrl进行获取。
-    this.GoodsListHttp()
+    //获取优惠券不需要每次获取。可以在UI侧增加点击事件获取优惠卷
     this.getCouponsAvailableHttp()
     this.getCouponsNotAvailableHttp()
     this.GoodsActivitySettings()

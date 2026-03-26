@@ -132,15 +132,10 @@ struct GuestLivePage {
   private player_config?: VHPlayerConfig;
   private chat_messages?: VHChatMessageList;
   private imBase?: VHIMServer;
-  private pushCardContentNode: ComponentContent<Object> | null = null;
-  private interactAwardContentNode: ComponentContent<Object> | null = null;
-  private signServer?: VHSignServer = new VHSignServer(this);
   private AnnouncementServer?: VHAnnouncementServer = new VHAnnouncementServer(this);
-  private LotteryServer?: VHLotteryServer = new VHLotteryServer(this);
   @State webinar_id: string = '';
   @State nick_name: string = '';
   @State @Watch('changeOrientation') isLandscapeStart: boolean = false; // 是否横屏状态
-  @State @Watch('openSetting') openSettingBtn: boolean = false;
   pageInfos: NavPathStack = new NavPathStack() // 导航
   @State pageList: Array<VHMenus> = new Array();
   @State menusId: string = '';
@@ -158,8 +153,6 @@ struct GuestLivePage {
   @State isShowQuestionAnswer: boolean = false;
   @State questionAnswerName: string = '';
   @State qaTabIndex: number = -1;
-  @Provide lotteryPush: VHLotteryResultNoticeModel | null = null
-  @Provide lotteryResultNotice: VHLotteryResultNoticeModel | null = null
   @Provide timerMsg: VHTimerMsg | null = null
   @State timerPauseMsg: VHTimerPauseMsg | null = null
   @State showTimerDialog: boolean = false;
@@ -172,30 +165,13 @@ struct GuestLivePage {
   @Provide examData: VHExaminationModel | null = null
   @Provide ExamUrl: string = ''
   @Provide ExamList: VHExamList[] = []
-  @Provide CardList: VHCardInfo[] = []
 
-  @Provide card: VHPushScreenCardMsg | null = null;
-  @Provide GoodsList: VHPushGoodsChangeData | null = null
-  @Provide GoodsListData: VHGoodsInfo[] = []
-  @Provide CouponsAvailable: VHCouponInfo[] = []
-  @Provide CouponsNotAvailable: VHNotAvailableCouponInfo[] = []
-  @Provide CouponsWebinarId: number = 0
   controller: TabsController = new TabsController();
   @State customMenuList: Array<VHMenus> = new Array();
-  @State RedEnvelope: VHRedEnvelopeInfo | null = null;
-  // @State RedEnvelopeUserList: VHWinningUserListInfo[] = [];
-  @State RedEnvelopeData: VHPwdRedEnvelopeData  = new VHPwdRedEnvelopeData;
   @State functionConfig: VHConfigList | null = null; //功能配置
   @State room_tool: VHRoomToolsStatusData | null = null
   @Provide agreement: VHAgreement = new VHAgreement();
-  @State SignPush: VHSignData = new VHSignData();
-  @State DoingSign: VHDoingSignInfo = new VHDoingSignInfo();
-  @Provide signInfo: VHSignInfo = new VHSignInfo();
   @Provide roomId: string = ''
-  @State LotteryCarryOut: VHLotteryCarryOut | null = null
-  @State LotteryList: VHLotteryList[] = []
-  @State LotteryStatus: boolean = false
-  @State LotteryStatusEnd: boolean = false
   private imConnected: boolean = false;
   private imConnectTimer: number = -1;
   @State welcomeContent: string = '';
@@ -215,7 +191,6 @@ struct GuestLivePage {
   private avSessionManager = new AVSessionManager()
 
   aboutToAppear() {
-    this.LotteryCarryOut = null;
     this.getUIContext().setKeyboardAvoidMode(KeyboardAvoidMode.RESIZE)
     try {
       const displayInfo = display.getDefaultDisplaySync();
@@ -232,7 +207,6 @@ struct GuestLivePage {
         //连接消息服务, 此方法会建立websocket进行消息的接收处理。在线状态也是通过此方法控制
         this.imBase = new VHIMServer(this);
         this.imBase.join(this.webinar_info!);
-
         VHSaaSDK.getInstance().getConfigList("3", this.webinar_info?.webinar?.id.toString()!,
           this.webinar_info?.webinar?.userinfo.user_id.toString()!, {
             onSucceed: (data: VHConfigList) => {
@@ -248,7 +222,6 @@ struct GuestLivePage {
           onSucceed: (data: VHCommonConfig) => {
             this.commonConfig = data;
             //当前是否有红包
-            this.initRedPacket(this.commonConfig.pwd_red_packet?.status!,this.commonConfig?.pwd_red_packet?.red_packet_uuid!);
             this.room_tool = data.room_tool as VHRoomToolsStatusData;
             if (data.timer !== null && data.timer.duration !== undefined) {
               let timer = data.timer as VHTimer;
@@ -280,7 +253,6 @@ struct GuestLivePage {
           }
         });
         this.textData = VHIntroduction.getIntroduction(this.webinar_info?.webinar?.introduction ?? '');
-        this.CouponsWebinarId = this.webinar_info?.webinar?.id as number
         let options: preferences.Options = { name: 'isAnnouncementShown' };
         this.dataPreferences =
           preferences.getPreferencesSync(this.getUIContext().getHostContext()?.getApplicationContext(), options);
@@ -472,12 +444,6 @@ struct GuestLivePage {
       this.imConnectTimer = -1;
     }
     this.imBase?.leave();
-    this.VHExamDialog.close()
-    this.VHQuestionnaireDialog.close()
-    this.SignDialog.close()
-    this.signId = 0
-    this.VHCardDialog.close()
-    this.VHEnvelopeDialog.close()
     this.VHAnnouncementDialog.close()
     const isUserExists = this.streamList.some(item => item.userId === this.userId);
     if (isUserExists) {
@@ -494,28 +460,6 @@ struct GuestLivePage {
     this.streamList = [];
   }
 
-  private initRedPacket(status:number,uuid:string){
-    // 红包状态
-    if(status == 1){
-      VHSaaSDK.getInstance().getRedPacketStatus(this.webinar_info?.interact?.room_id!,uuid,{
-        onSucceed: (data: VHRedPacketStatus) => {
-          if(data.is_luck == 2){
-            this.RedEnvelope = new VHRedEnvelopeInfo;
-            this.RedEnvelope.status = 1;
-            this.RedEnvelope.red_code = data.red_code;
-            this.RedEnvelopeData.room_id = this.webinar_info?.interact?.room_id!;
-            this.RedEnvelopeData.red_packet_uuid = uuid;
-            if (this.RedEnvelope != null) {
-              this.VHEnvelopeDialog.open()
-            }
-          }
-        },
-        onFailure: (errorCode: number, errorMsg: string) => {
-
-        }
-      })
-    }
-  }
 
   initTimer(timer: VHTimer) {
     if (timer !== null) {
@@ -535,29 +479,7 @@ struct GuestLivePage {
     }
   }
 
-  initWebinarSurvey() {
-    VHSaaSDK.getInstance()
-      .getLastPublishWebinarSurvey(this.webinar_info?.interact?.room_id!, this.webinar_info?.switch_info?.start_time!,
-        "",0, {
-          onSuccess: (data: VHWebinarSurvey) => {
-            let extend: VHWebinarSurveyExtend = JSON.parse(data.extend) as VHWebinarSurveyExtend;
-            if (extend.mandatory_filling == 1) {
-              this.questionnaireList.forEach((value: VHHistoryQuestionnaire, index: number,
-                array: VHHistoryQuestionnaire[]) => {
-                if (data.question_id == value.question_id && value.is_answered == "0") {
-                  //获取url嵌入页面
-                  this.SurveyQuestionnaireUrl =
-                    VHSurveyInternal.getSurveyUrl(this.webinar_info!, data.question_id.toString());
-                  this.openSurveyView();
-                }
-              })
-            }
-          },
-          onFailure: (errorCode: number, errorMsg: string) => {
 
-          }
-        });
-  }
 
   getTimerType(status: string): string {
     // 4 TIMER_PAUSE
@@ -588,12 +510,7 @@ struct GuestLivePage {
     }
   }
 
-  SurveyQuestionnaire() {
-    this.SurveyQuestionnaireUrl =
-      VHSurveyInternal.getSurveyUrl(this.webinar_info!, this.questionnairePush?.questionnaire_id as string
-        || this.questionnaireList[0].question_id.toString()) as string
-    console.log(`获取问卷调查数据成功： ${this.SurveyQuestionnaireUrl}`)
-  }
+
 
   VHExam(id: string, type: string) {
     this.ExamUrl =
@@ -669,23 +586,6 @@ struct GuestLivePage {
     this.qaTabIndex = -1
   }
 
-  //观看协议消息
-  AgreementMessage() {
-    if (this.webinar_info?.webinar != null) {
-      let recordId: string = "";
-      if (this.webinar_info.webinar.type == 5) {
-        recordId = this.webinar_info.record?.record_id!; //回放获取当前回放id
-      }
-      VHSaaSDK.getInstance().getWatchInfo(this.webinar_info.webinar.id.toString(), recordId, '', '',  {
-        onSucceed: (data: VHWebinarData) => {
-          this.agreement = data.agreement as VHAgreement;
-        },
-        onFailure: (errorCode, errorMsg) => {
-          ToastUtil.showToast(errorMsg);
-        }
-      })
-    }
-  }
 
   // 公告列表
   AnnouncementListHttp() {
@@ -707,208 +607,12 @@ struct GuestLivePage {
     })
   }
 
-  // 问卷列表
-  QuestionnaireListHttp(openDialog: boolean) {
-    VHSaaSDK.getInstance()
-      .performQuestionnaireListIn(this.webinar_info?.interact?.room_id!, this.webinar_info?.webinar?.id.toString()!,
-        this.webinar_info?.switch_info?.switch_id.toString()!, {
-          onSucceed: (data: VHHistoryQuestionnaireInfo) => {
-            this.questionnaireList = data.list;
-            if (data.total > 0) {
-              this.SurveyQuestionnaire()
-            }
-            this.questionnaireAward = data.my_award_status;
-            if (openDialog) {
-              if (this.questionnaireList.length > 0) {
-                this.VHQuestionnaireDialog.open()
-              } else {
-                ToastUtil.showToast("没有更多数据");
-              }
-            } else {
-              this.initWebinarSurvey();
-            }
-            console.log(`获取问卷列表成功： ${JSON.stringify(this.questionnaireList)}`);
-          },
-          onFailure: (errorCode: number, errorMsg: string) => {
-            console.log(`获取问卷列表失败： ${errorMsg}`);
-            ToastUtil.showToast(errorMsg);
-          }
-        })
-  }
 
-  // 快问快答列表
-  ExamListHttp() {
-    VHSaaSDK.getInstance()
-      .performExamIn(this.webinar_info?.webinar?.id!, 1, this.webinar_info?.switch_info?.switch_id!, 0, {
-        onSucceed: (data) => {
-          this.ExamList = data as VHExamList[]
-          console.log(`获取快问快答列表成功： ${JSON.stringify(data)}`);
-        },
-        onFailure: (errorCode, errorMsg) => {
-          console.log(`获取快问快答列表失败： ${errorMsg}`);
-        }
-      })
-  }
-
-  //推屏卡片列表
-  CardListHttp() {
-    VHSaaSDK.getInstance()
-      .getCardList(this.webinar_info?.webinar?.id.toString()!, this.webinar_info?.switch_info?.switch_id.toString()!, 1,
-        10, {
-          onSucceed: (data: VHCardInfo[]) => {
-            this.CardList = data as VHCardInfo[]
-            console.log(`获取卡片数据成功： ${JSON.stringify(this.CardList)}`)
-          },
-          onFailure: (errorCode: number, errorMsg: string) => {
-
-          }
-        });
-  }
-
-  //检查抽奖列表接口
-  LotteryListHttp() {
-    VHSaaSDK.getInstance().getHistoryLotteryList('',
-      {
-        onSucceed: (data: VHLotteryList[]) => {
-          this.LotteryList = data as VHLotteryList[]
-        },
-        onFailure: (errorCode: number, errorMsg: string) => {
-
-        }
-      });
-  }
-
-  //检查抽奖进行中
-  LotteryCarryOutHttp() {
-    VHSaaSDK.getInstance().lotteryCheck(
-      {
-        onSucceed: (data) => {
-          this.LotteryCarryOut = data
-          console.log(`检查抽奖进行中成功： ${JSON.stringify(this.LotteryCarryOut)}`)
-        },
-        onFailure: (errorCode, errorMsg) => {
-          console.log(`检查抽奖进行中失败： ${errorMsg}`)
-          ToastUtil.showToast(errorMsg);
-        }
-      });
-  }
-
-  //商品列表
-  GoodsListHttp() {
-    VHSaaSDK.getInstance().getGoodsList(0,
-      {
-        onSucceed: (data:VHGoodsInfo[]) => {
-          this.GoodsListData = data.filter(item => item.status === 1);
-          console.log(`获取商品列表成功： ${JSON.stringify(this.GoodsListData)}`)
-        },
-        onFailure: (errorCode, errorMsg) => {
-          console.log(`获取商品列表失败： ${errorMsg}`)
-          ToastUtil.showToast(errorMsg);
-        }
-      });
-  }
-
-  GoodsInfoHttp(url: string) {
-    VHSaaSDK.getInstance().getGoodsInfoFromUrl(url,
-      {
-        onSuccess: (data:VHGoodsInfo[]) => {
-          this.PushProductData = data
-          this.dataPreferences?.putSync('isPushProductData', this.PushProductData);
-          this.dataPreferences?.flushSync();
-        },
-        onFailure: (errorCode, errorMsg) => {
-          ToastUtil.showToast(errorMsg)
-        }
-      })
-  }
-
-  GoodsActivitySettings() {
-    VHSaaSDK.getInstance().getGoodsOrderSetting(this.webinar_info?.webinar!.id.toString() as string, '',
-      {
-        onSucceed: (data:VHGoodsActivitySettings) => {
-          this.ActivitySettings = data as VHGoodsActivitySettings
-        },
-        onFailure: (errorCode, errorMsg) => {
-          ToastUtil.showToast(errorMsg);
-        }
-      });
-  }
-
-  //可用优惠卷列表
-  getCouponsAvailableHttp() {
-    VHSaaSDK.getInstance()
-      .getCouponAvailableList(this.webinar_info?.webinar?.id!, {
-        onSucceed: (data:VHCouponInfo[]) => {
-          this.CouponsAvailable = data
-          console.log(`获取可用优惠卷列表成功： ${JSON.stringify(data)}`)
-        },
-        onFailure: (errorCode, errorMsg) => {
-          console.log(`获取可用优惠卷列表失败： ${errorMsg}`)
-          ToastUtil.showToast(errorMsg);
-        }
-      });
-  }
-
-  //不可用优惠卷列表
-  getCouponsNotAvailableHttp() {
-    VHSaaSDK.getInstance()
-      .getCouponUnavailableList(this.webinar_info?.webinar?.id!, {
-        onSucceed: (data: VHNotAvailableCouponInfo[] ) => {
-          this.CouponsNotAvailable = data
-          console.log(`获取不可用优惠卷列表成功： ${JSON.stringify(data)}`)
-        },
-        onFailure: (errorCode, errorMsg) => {
-          console.log(`获取不可用优惠卷列表失败： ${errorMsg}`)
-          ToastUtil.showToast(errorMsg);
-        }
-      });
-  }
-
-  openSetting() {
-
-  }
-
-  //签到弹窗
-  SignDialog = new CustomDialogController({
-    builder: VHSignDialog({
-      server: this.signServer,
-      SignPush: this.SignPush,
-    }),
-    customStyle: true,
-    alignment: DialogAlignment.Bottom
-  })
   //公告弹窗
   VHAnnouncementDialog = new CustomDialogController({
     builder: VHAnnouncementDialog({
       server: this.AnnouncementServer,
       announcementValue: this.announcementValue
-    }),
-    customStyle: true,
-    alignment: DialogAlignment.Bottom
-  })
-  //问卷弹窗
-  VHQuestionnaireDialog = new CustomDialogController({
-    builder: QuestionnaireBuilder({ webinar: this.webinar_info }),
-    customStyle: true,
-    alignment: DialogAlignment.Bottom
-  })
-  //快问快答弹窗
-  VHExamDialog = new CustomDialogController({
-    builder: ExamBuilder({ webinar_info: this.webinar_info }),
-    customStyle: true,
-    alignment: DialogAlignment.Bottom
-  })
-  //推屏卡片弹窗
-  VHCardDialog = new CustomDialogController({
-    builder: VHCardDialog(),
-    customStyle: true,
-    alignment: DialogAlignment.Bottom
-  })
-  //口令红包弹窗
-  VHEnvelopeDialog = new CustomDialogController({
-    builder: VHPasswordEnvelopePage({
-      RedEnvelope: this.RedEnvelope,
-      RedEnvelopeData: this.RedEnvelopeData
     }),
     customStyle: true,
     alignment: DialogAlignment.Bottom
@@ -942,19 +646,6 @@ struct GuestLivePage {
     console.log('删除公告：', msgModel)
   }
 
-  /**
-   * @description 开始抽奖
-   */
-  onStartLottery(msgModel?: VHLotteryMessage) {
-    console.log('开始抽奖：', msgModel)
-  }
-
-  /**
-   * @description 抽奖结果
-   */
-  onEndLottery(msgModel?: VHLotteryMessage) {
-    console.log('抽奖结果：', msgModel)
-  }
 
   changeOrientation() {
     // 获取UIAbility实例的上下文信息
@@ -1032,13 +723,6 @@ struct GuestLivePage {
     if (type == VHRoomEventType.TIMER_PAUSE) {
       this.handlePauseTimer(type, message);
     }
-    if (
-    // type == VHRoomEventType.CUSTOM_MSG||
-      type == VHRoomEventType.GOODS_UPDATE_INFO
-        || type == VHRoomEventType.PUSH_GOODS_CHANGE
-    ) {
-      this.handleGoods(type, message);
-    }
     if (type == VHRoomEventType.DATA_DOWNLOAD_UPDATE) {
       this.handleDataDownloadUpdateMsg(message);
     }
@@ -1081,21 +765,11 @@ struct GuestLivePage {
       type === VHRoomEventType.TIMER_END) {
       // 处理计时器
       this.handleTimer(type, message);
-    } else if (type == VHRoomEventType.SIGN_IN_PUSH) { //签到推送
-      this.handleSignInPush(message)
-    } else if (type == VHRoomEventType.SIGN_END) { //签到结束
-      this.handleSignInEnd(message)
     } else if (type == VHRoomEventType.LIVE_OVER) {
       this.handleLiveOver(message);
     } else if (type == VHRoomEventType.BASE_NUM_UPDATE) {
       EmitterMessage.handleBaseUpdateMsg(message);
-    } else if (type == VHRoomEventType.LOTTERY_PUSH) {
-      this.handleLotteryPush(message);
-    } else if (type == VHRoomEventType.LOTTERY_RESULT_NOTICE) {
-      this.handleLotteryResultNotice(message);
-    } else if (type == VHRoomEventType.QUESTIONNAIRE_PUSH) {
-      this.handleQuestionnairePush(message)
-    } else if (type == VHRoomEventType.ROOM_KICK_OUT) {
+    }  else if (type == VHRoomEventType.ROOM_KICK_OUT) {
       this.handleKickOutPush(message)
     } else if (type == VHRoomEventType.CHAT_DISABLE) {
       this.handleChatDisablePush(message)
@@ -1105,28 +779,6 @@ struct GuestLivePage {
       EmitterMessage.handleChatDisableAll(message);
     } else if (type == VHRoomEventType.CHAT_PERMIT_ALL) {
       EmitterMessage.handleChatPermitAll(message);
-    } else if (type == VHRoomEventType.PUSH_SCREEN_CARD) {
-      PromptActionClass.closeDialog();
-      this.handlePushCardMsg(message);
-      this.CardListHttp()
-    } else if (type == VHRoomEventType.PUSH_SCREEN_CARD_DELETE) {
-      this.CardListHttp()
-    } else if (type == VHRoomEventType.PAPER_SEND) { //推送快问快答
-      this.handleExam(message)
-    } else if (type == VHRoomEventType.PAPER_SEND_RANK || type == VHRoomEventType.PAPER_AUTO_SEND_RANK) { //推送 快问快答 公布成绩
-      this.handleExamRank(message);
-    } else if (type == VHRoomEventType.PAPER_END) { //推送 PAPER_END
-      this.handleExamEnd(message);
-    } else if (type == VHRoomEventType.WATCH_GIFT_OPEN) { //推送观看有礼
-      this.handleWatchGiftOpen(message)
-    } else if (type == VHRoomEventType.WATCH_GIFT_END) { //推送观看有礼结束
-      this.handleWatchGiftEnd(message)
-    } else if (type == VHRoomEventType.PUSH_INTERACT_REWARD_WINNING_NOTICE) { //互动有礼中奖推送消息
-      this.handleInteractRewardWinning(message)
-    } else if (type == VHRoomEventType.PUSH_PWD_RED_ENVELOPE_OK) {
-      this.handlePasswordPack(message)
-    } else if (type == VHRoomEventType.PUSH_GOODS_CHANGE) {
-      this.handleGoods(type, message);
     } else if (type == VHRoomEventType.IM_BANNED_MODE_UPDATE) { //禁言感知状态
       this.handleBannedModeUpdate(message);
     } else if (type == VHRoomEventType.IM_CHAT_NICK_NAME_ENCRYPTION) { //聊天昵称加密
@@ -1179,182 +831,6 @@ struct GuestLivePage {
     let bannedMode: VHBannedModeUpdate = message.data as VHBannedModeUpdate
     //聊天禁言是否有感知。如果用户被禁言 mode=1 时为无感知禁言，发送聊天时不调用接口，但是聊天区域显示聊天内容。业务需要用户自行实现
     this.chatBannedMode = bannedMode.mode;
-  }
-
-  private handleSignInPush(message: VHIMMessageModel) {
-    this.SignPush = message.data as VHSignData
-    this.SignDialog.open()
-    this.signId = this.SignPush?.sign_id;
-  }
-
-  private handleSignInEnd(message: VHIMMessageModel) {
-    let msg: VHSignData = message.data as VHSignData
-    //如果结束签到时，当前用户没有签到，若开启踢出则踢出直播间
-    if (msg.sign_id == this.SignPush.sign_id && this.SignPush.auto_kick_unsigned == 1 && this.signTime > 0) {
-      this.pageInfos.pop();
-      ToastUtil.showToast("您未进行签到已被踢出")
-    }
-    this.SignDialog.close()
-    this.signId = 0;
-  }
-
-  private handlePasswordPack(message: VHIMMessageModel) {
-    this.VHEnvelopeDialog.close()
-    const RedEnvelope = message.data as VHPwdRedEnvelopeData;
-    this.RedEnvelopeData = RedEnvelope
-    this.initRedPacket(1,RedEnvelope.red_packet_uuid);
-  }
-
-  private handleInteractRewardWinning(message: VHIMMessageModel) {
-    // 创建参数对象
-    const params = new InteractAwardParams(message.data as VHInteractRewardWinning, this.webinar_info!);
-    this.interactAwardContentNode =
-      new ComponentContent(this.getUIContext(), wrapBuilder(createInteractAwardGiftView), params);
-    PromptActionClass.setContext(this.getUIContext());
-    PromptActionClass.setContentNode(this.interactAwardContentNode);
-    if (params.gift.display_of_results == 0) {
-      PromptActionClass.setOptions({
-        alignment: DialogAlignment.Center,
-        isModal: true,
-        maskRect: {
-          x: 0,
-          y: 0,
-          width: '100%',
-          height: '100%'
-        }
-      });
-    }
-    PromptActionClass.openDialog();
-  }
-
-  private handleWatchGift(gift: VHWatchGiftInfo) {
-    // 创建参数对象
-    const params = new WatchGiftParams(gift, this.webinar_info!);
-    this.pushCardContentNode = new ComponentContent(this.getUIContext(), wrapBuilder(createWatchGiftView), params);
-    PromptActionClass.setContext(this.getUIContext());
-    PromptActionClass.setContentNode(this.pushCardContentNode);
-    if (params.gift.display_of_results == 0) {
-      PromptActionClass.setOptions({
-        alignment: DialogAlignment.Center,
-        isModal: true,
-        maskRect: {
-          x: 0,
-          y: 0,
-          width: '100%',
-          height: '100%'
-        }
-      });
-    }
-    PromptActionClass.openDialog();
-  }
-
-  private handleWatchGiftOpen(message: VHIMMessageModel) {
-    PromptActionClass.closeDialog();
-    //参与观看有礼 需要先调用此接口，表示开始参与，否则会提示参与时长不够
-    VHSaaSDK.getInstance().getWatchGiftLastInfo(this.webinar_info?.webinar?.id!, {
-      // 成功
-      onSucceed: (data: VHWatchGiftInfo | null) => {
-        if (data == null) {
-          //无观看有礼
-          return;
-        }
-        //进入直播间如果正在推送且没有到达观看限制，则显示观看有礼信息
-        if (data.state == 1 && data?.watch_minute! * 60 > data?.online_duration!) {
-          this.handleWatchGift(data);
-        }
-      },
-      // 失败
-      onFailure: (errorCode: number, errorMsg: string) => {
-        ToastUtil.showToast(errorMsg);
-      }
-    })
-  }
-
-  private initWatchGift() {
-    VHSaaSDK.getInstance().getWatchGiftLastInfo(this.webinar_info?.webinar?.id!, {
-      // 成功
-      onSucceed: (data: VHWatchGiftInfo | null) => {
-        if (data == null) {
-          return;
-        }
-        //进入直播间如果正在推送且没有到达观看限制，则显示观看有礼信息
-        if (data.state == 1 && data?.watch_minute! * 60 > data?.online_duration!) {
-          this.handleWatchGift(data);
-        }
-      },
-      // 失败
-      onFailure: (errorCode: number, errorMsg: string) => {
-        ToastUtil.showToast(errorMsg);
-      }
-    })
-  }
-
-  private handleWatchGiftEnd(message: VHIMMessageModel) {
-    // let watchGift: VHWatchGiftEndMsg = message.data as VHWatchGiftEndMsg;
-    PromptActionClass.closeDialog();
-  }
-
-  private handlePushCardMsg(message: VHIMMessageModel) {
-    this.VHCardDialog.close()
-    let card: VHPushScreenCardMsg = message.data as VHPushScreenCardMsg;
-    this.card = card;
-    // 创建参数对象
-    const params = new PushCardParams(card.card_info, this.webinar_info!);
-    this.pushCardContentNode = new ComponentContent(this.getUIContext(), wrapBuilder(createPushCardView), params);
-    PromptActionClass.setContext(this.getUIContext());
-    PromptActionClass.setContentNode(this.pushCardContentNode);
-    if (card.card_info.show_mode == 0) {
-      PromptActionClass.setOptions({
-        alignment: DialogAlignment.Center,
-        isModal: true,
-        maskRect: {
-          x: 0,
-          y: 0,
-          width: '100%',
-          height: '100%'
-        }
-      });
-    } else if (card.card_info.show_mode == 1) {
-      if (card.card_info.timer_enable == 1 && card.card_info.href_enable == 1) {
-        PromptActionClass.setOptions({
-          alignment: DialogAlignment.BottomEnd,
-          isModal: false,
-          offset: { dx: -10, dy: -170 },
-          maskRect: {
-            x: 0,
-            y: 0,
-            width: '100%',
-            height: '100%'
-          }
-        });
-      } else if (card.card_info.timer_enable == 1 || card.card_info.href_enable == 1) {
-        PromptActionClass.setOptions({
-          alignment: DialogAlignment.BottomEnd,
-          isModal: false,
-          offset: { dx: -10, dy: -120 },
-          maskRect: {
-            x: 0,
-            y: 0,
-            width: '100%',
-            height: '100%'
-          }
-        });
-      } else {
-        PromptActionClass.setOptions({
-          alignment: DialogAlignment.BottomEnd,
-          isModal: false,
-          offset: { dx: -10, dy: -90 },
-          maskRect: {
-            x: 0,
-            y: 0,
-            width: '100%',
-            height: '100%'
-          }
-        });
-      }
-
-    }
-    PromptActionClass.openDialog();
   }
 
   private handleChatDisablePush(message: VHIMMessageModel) {
@@ -1521,142 +997,6 @@ struct GuestLivePage {
     this.announcement = announcementData
     EmitterMessage.handleAnnouncementMsg(message);
     this.AnnouncementListHttp()
-  }
-
-  private handleLotteryPush(message: VHIMMessageModel) {
-    this.lotteryPush = message.data as VHLotteryResultNoticeModel
-    this.lotteryResultNotice = null;
-    this.LotteryCarryOutHttp()
-    this.LotteryListHttp()
-    this.closeLotteryListDialog = false
-    this.LotteryStatusEnd = false
-  }
-
-  private handleLotteryResultNotice(message: VHIMMessageModel) {
-    this.lotteryResultNotice = message.data as VHLotteryResultNoticeModel
-    this.LotteryCarryOutHttp()
-    this.LotteryListHttp()
-    this.LotteryStatus = false
-  }
-
-  private handleQuestionnairePush(message: VHIMMessageModel) {
-    this.VHQuestionnaireDialog.close()
-    this.QuestionnaireListHttp(false)
-    this.questionnairePush = message.data as VHQuestionnairePushModel
-    this.SurveyQuestionnaire()
-    setTimeout(() => {
-      const isQuestionnaire: VHHistoryQuestionnaire = this.questionnaireList.find(item => {
-        return item.question_id.toString() === this.questionnairePush?.questionnaire_id
-      }) as VHHistoryQuestionnaire
-
-      // let param: object = new Object()
-      // param['questionnaireUrl'] = this.SurveyQuestionnaireUrl
-      // param['webinar_info'] = this.webinar_info
-      // param['questionnaireList'] = this.questionnaireList
-      // const pathInfo = new NavPathInfo(
-      //   'QuestionnairePage', // 页面名称
-      //   param, // 传递给子页面的参数
-      //   undefined,
-      //   true
-      // );
-      // // 配置导航选项
-      // const options: NavigationOptions = {
-      //   launchMode: LaunchMode.NEW_INSTANCE // 关键参数
-      // };
-      // let count: Array<number> = this.pageInfos.getIndexByName('QuestionnairePage')
-      // if (count.length > 0) {
-      //   this.pageInfos.pop();
-      // }
-      // this.pageInfos.pushPath(pathInfo, options);
-      // if (isQuestionnaire.is_answered == '0') {
-      //
-      // }
-      this.openSurveyView();
-    }, 500)
-
-  }
-
-  private openSurveyView() {
-    let param: object = new Object()
-    param['questionnaireUrl'] = this.SurveyQuestionnaireUrl
-    param['webinar_info'] = this.webinar_info
-    param['questionnaireList'] = this.questionnaireList
-    const pathInfo = new NavPathInfo(
-      'QuestionnairePage', // 页面名称
-      param, // 传递给子页面的参数
-      undefined,
-      true
-    );
-    // 配置导航选项
-    const options: NavigationOptions = {
-      launchMode: LaunchMode.NEW_INSTANCE // 关键参数
-    };
-    let count: Array<number> = this.pageInfos.getIndexByName('QuestionnairePage')
-    if (count.length > 0) {
-      this.pageInfos.pop();
-    }
-    this.pageInfos.pushPath(pathInfo, options);
-  }
-
-  private handleExam(message: VHIMMessageModel) {
-    this.VHExamDialog.close()
-    this.examData = message.data as VHExaminationModel
-    //观看时长需要用户自行进行统计。满足条件后才可以进行答题
-    if (this.examData.answer_condition?.viewing_minutes! > 0) {
-      //需要自行实现。
-    }
-    this.ExamListHttp()
-    this.VHExam(this.examData.paper_id, this.examData.type)
-    let param: object = new Object()
-    param['ExamUrl'] = this.ExamUrl
-    const pathInfo = new NavPathInfo(
-      'ExamPage', // 页面名称
-      param, // 传递给子页面的参数
-      undefined,
-      true
-    );
-    this.pageInfos.pushPath(pathInfo, true);
-  }
-
-  private handleExamEnd(message: VHIMMessageModel) {
-    this.VHExamDialog.close()
-    this.examData = message.data as VHExaminationModel
-    VHSaaSDK.getInstance()
-      .setExamUserAnswerStatus(this.examData.paper_id, this.webinar_info?.webinar?.id!,
-        this.webinar_info?.switch_info?.switch_id!, {
-          onSucceed: (data: VHExamUserAnswerStatus) => {
-            ToastUtil.showToast('data')
-          },
-          onFailure: (errorCode: number, errorMsg: string) => {
-            ToastUtil.showToast(errorMsg)
-          }
-        });
-
-    this.pageInfos.removeByName("ExamPage")
-    ToastUtil.showToast("答题已结束")
-  }
-
-  private handleExamRank(message: VHIMMessageModel) {
-    let msg: VHExamRank = message.data as VHExamRank
-    let msgData: EmitterMsgData;
-    msgData = {
-      type: VHRoomEventType.PAPER_SEND_RANK, // 消息类型
-      data: msg
-    } as EmitterMsgData;
-    // 通过EmitterUtil发送
-    EmitterUtil.send(msgData);
-  }
-
-  private handleGoods(type: string, message: VHIMMessageModel) {
-    this.GoodsList = message.data as VHPushGoodsChangeData
-    if(this.GoodsList.cdn_url.length > 0){
-      this.GoodsInfoHttp(this.GoodsList.cdn_url)
-    }
-    //建议当cdn_url不为空时，获取商品列表也使用getGoodsInfoFromUrl进行获取。
-    this.GoodsListHttp()
-    this.getCouponsAvailableHttp()
-    this.getCouponsNotAvailableHttp()
-    this.GoodsActivitySettings()
   }
 
   private handleConnectInvite(message: VHIMMessageModel) {
@@ -1861,24 +1201,6 @@ struct GuestLivePage {
                   if (this.announcement.duration >= 0 && !this.isAnnouncementShown) {
                     VHAnnouncementPopup()
                   }
-                  if (this.GoodsListData.length > 0) {
-                    if (this.GoodsListData[0].push_status == 1) {
-                      FloatingWindow({
-                        Floating: true,
-                        GoodsListData: this.GoodsListData,
-                        // ActivitySettings: this.GoodsList,
-                        webinars: this.webinar_info
-                      })
-                    } else {
-                      FloatingWindow({
-                        Floating: false,
-                        GoodsListData: this.GoodsListData,
-                        // ActivitySettings: this.ActivitySettings,
-                        webinars: this.webinar_info
-                      })
-                    }
-                  }
-
                   if (this.isTimerShow)
                   Column() {
                     Image($r("app.media.timer"))
@@ -1916,76 +1238,12 @@ struct GuestLivePage {
                             Column() {
                               if (this.VHbol) {
                                 Column({ space: 4 }) {
-                                  //抽奖
-                                  Image($r('app.media.icon_lottery'))
-                                    .width(30)
-                                    .onClick(() => {
-                                      if (this.LotteryCarryOut?.icon != null || this.LotteryList.length != 0) {
-                                        if (this.LotteryCarryOut!.lottery_status == 0 ||
-                                          this.LotteryList[0]?.lottery_status == 0) {
-                                          this.LotteryStatus = !this.LotteryStatus
-                                        } else {
-                                          this.LotteryStatusEnd = !this.LotteryStatusEnd
-                                          if(this.lotteryResultNotice == null){
-                                            this.lotteryResultNotice = new VHLotteryResultNoticeModel;
-                                            this.lotteryResultNotice.room_id = this.webinar_info?.interact?.room_id!;
-                                            this.lotteryResultNotice.lottery_id = this.LotteryList[0].id;
-                                            this.lotteryResultNotice.receive_award_way = this.LotteryList[0].receive_award_way;
-                                            this.lotteryResultNotice.lottery_type = this.LotteryList[0].lottery_type;
-                                          }
-                                        }
-                                        this.VHbol = !this.VHbol
-                                      } else {
-                                        ToastUtil.showToast("没有更多数据");
-                                      }
-                                    })
-                                  //快问快答
-                                  Image($r('app.media.icon_exam'))
-                                    .width(30)
-                                    .onClick(() => {
-                                      if (this.examData != null || this.ExamList.length != 0) {
-                                        VHSaaSDK.getInstance()
-                                          .performExamIn(this.webinar_info?.webinar?.id!, 1,
-                                            this.webinar_info?.switch_info?.switch_id!, 0, {
-                                              onSucceed: (data) => {
-                                                this.ExamList = data
-                                                this.VHExamDialog.open()
-                                                this.VHbol = !this.VHbol
-                                                console.log(`获取快问快答列表成功： ${JSON.stringify(data)}`);
-                                              },
-                                              onFailure: (errorCode, errorMsg) => {
-                                                console.log(`获取快问快答列表失败： ${errorMsg}`);
-                                              }
-                                            })
-                                      } else {
-                                        ToastUtil.showToast("没有更多数据");
-                                      }
-                                    })
-
-                                  //问卷
-                                  Image($r('app.media.icon_task'))
-                                    .width(30)
-                                    .onClick(() => {
-                                      this.QuestionnaireListHttp(true);
-                                      this.VHbol = !this.VHbol
-                                    })
                                   //公告
                                   Image($r('app.media.icon_reminder'))
                                     .width(30)
                                     .onClick(() => {
                                       if (this.AnnouncementList.length != 0) {
                                         this.VHAnnouncementDialog.open()
-                                        this.VHbol = !this.VHbol
-                                      } else {
-                                        ToastUtil.showToast("没有更多数据");
-                                      }
-                                    })
-                                  //推屏卡片
-                                  Image($r('app.media.icon_laber'))
-                                    .width(30)
-                                    .onClick(() => {
-                                      if (this.CardList.length != 0) {
-                                        this.VHCardDialog.open()
                                         this.VHbol = !this.VHbol
                                       } else {
                                         ToastUtil.showToast("没有更多数据");
@@ -2008,7 +1266,6 @@ struct GuestLivePage {
                             }.width(30)
                             .position({ x: 340, y: 420 })
                             .zIndex(1)
-
                             ChatComponent({
                               webinars: this.webinar_info,
                               imBase: this.imBase,
@@ -2038,35 +1295,7 @@ struct GuestLivePage {
                           })
                             .width('100%')
                             .height('100%')
-                        } else if (item.name === '私聊') {
-                          PrivateChatComponent({
-                            webinars: this.webinar_info,
-                            functionConfig: this.functionConfig,
-                            room_tool: this.room_tool,
-                            imBase: this.imBase
-                          })
-                            .width('100%')
-                            .height('100%')
-                        } else if (item.name === '文件下载') {
-                          VHDownLoadFileComponent({ webinars: this.webinar_info, menusId: this.menusId })
-                            .width('100%')
-                            .height('100%')
-                        } else if (item.name === '商品') {
-                          if (this.GoodsListData.length != 0) {
-                            VHGoodsComponent({ webinars: this.webinar_info, PushProductData: this.PushProductData })
-                              .width('100%')
-                              .height('100%')
-                          }
-                        } else if (item.name === '推荐') {
-                          VHAdvComponent({ webinars: this.webinar_info })
-                            .width('100%')
-                            .height('100%')
-                        } else if (this.customMenuList.find((menu) => menu.name === item.name)) {
-                          VHCustomMenu({ menu_id: item.id.toString(), webinars: this.webinar_info,enableInviteCard: Number(this.commonConfig.invite_card) })
-                            .width('100%')
-                            .height('100%')
                         }
-
                       }.tabBar(item.name as string)
                     })
                   }.barHeight(40).barMode(BarMode.Scrollable)
@@ -2091,24 +1320,7 @@ struct GuestLivePage {
             .zIndex(4)
         }
 
-        if (this.lotteryPush != null || this.LotteryStatus) {
-          LotteryDialog({
-            LotteryCarryOut: this.LotteryCarryOut as VHLotteryCarryOut,
-            room_id: this.webinar_info?.interact?.room_id,
-            LotteryStatus: this.LotteryStatus,
-          })
-        }
-        if (this.lotteryResultNotice != null || this.LotteryStatusEnd) {
-          LotteryDetails(
-            {
-              user_id: this.webinar_info?.join_info?.user_id,
-              room_id: this.webinar_info?.interact?.room_id,
-              nickname: this.webinar_info?.join_info?.nickname,
-              LotteryList: this.LotteryList,
-              LotteryStatusEnd: this.LotteryStatusEnd,
-            }
-          )
-        }
+
       }
     }
     .width('100%')
