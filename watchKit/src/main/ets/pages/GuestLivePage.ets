@@ -338,7 +338,7 @@ struct GuestLivePage {
                   selfItem.streamAttr = stream.attribute;
                   let attribute = JSON.parse(stream.attribute) as object;
                   selfItem.nickName = attribute["nickName"];
-                  if (attribute["roleName"] === 1) {
+                  if (attribute["roleName"] === 1 || attribute["role"] === "1") {
                     selfItem.isMain = true;
                   }
                   this.streamList.push(selfItem);

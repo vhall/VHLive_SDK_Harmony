@@ -429,7 +429,7 @@ struct WatchLivePage {
               selfItem.streamAttr = stream.attribute;
               let attribute = JSON.parse(stream.attribute) as object;
               selfItem.nickName = attribute["nickName"];
-              if (attribute["roleName"] === 1) {
+              if (attribute["roleName"] === 1 || attribute["role"] === "1") {
                 if (!this.streamList.some(item => item.isMain)) {
                   selfItem.isMain = true;
                 }
