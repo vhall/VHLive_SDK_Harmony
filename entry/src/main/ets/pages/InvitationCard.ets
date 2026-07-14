@@ -15,6 +15,7 @@ export function InvitationCardBuilder(name: string, param: object) {
       webinar_id: param['webinar_id'],
       nick_name: param['nick_name'],
       h5Live: param['h5Live'],
+      email: param['email'],
     }
   )
 }
@@ -30,6 +31,7 @@ export struct InvitationCard {
   private webinars?: VHWebinarData;
   private webinar_id: string = '';
   private nick_name: string = '';
+  private email: string = '';
   private h5Live: boolean = false;
   private contentNode: ComponentContent<Object> | null = null;
   pageInfos: NavPathStack = new NavPathStack() // 导航
@@ -62,7 +64,7 @@ export struct InvitationCard {
       }
     });
     PromptActionClass.openDialog();
-    this.model.doInitWatch(this.webinar_id, "", this.nick_name, {
+    this.model.doInitWatch(this.webinar_id, "", this.nick_name, this.email,"","3",  {
       onSucceed: (data: VHWebinarData) => {
         this.webinars = data;
         if (this.webinars.join_info?.is_kick == 1) {
@@ -76,6 +78,8 @@ export struct InvitationCard {
             if (this.h5Live) {
               let param: object = new Object()
               param['webinars'] = this.webinars;
+              param['nickname'] = this.nick_name;
+              param['email'] = this.email;
               this.pageInfos.replacePath({ name: 'VHH5LivePage', param: param },
                 { launchMode: LaunchMode.MOVE_TO_TOP_SINGLETON })
             } else if (this.webinars?.webinar?.type == 2 ||
@@ -84,12 +88,16 @@ export struct InvitationCard {
               let param: object = new Object()
               param['webinars'] = this.webinars;
               param['player_config'] = data;
+              param['nickname'] = this.nick_name;
+              param['email'] = this.email;
               this.pageInfos.replacePath({ name: 'ReservationPage', param: param },
                 { launchMode: LaunchMode.MOVE_TO_TOP_SINGLETON })
             } else if (this.webinars?.webinar?.type == 4 || this.webinars?.webinar?.type == 5) {
               let param: object = new Object()
               param['webinars'] = this.webinars;
               param['player_config'] = data;
+              param['nickname'] = this.nick_name;
+              param['email'] = this.email;
               this.pageInfos.replacePath({ name: 'WatchVodPage', param: param },
                 { launchMode: LaunchMode.MOVE_TO_TOP_SINGLETON })
             } else if (this.webinars?.webinar?.type == 1) {
@@ -97,6 +105,9 @@ export struct InvitationCard {
               param['webinars'] = this.webinars
               param['player_config'] = data;
               param['webinar_id'] = this.webinar_id;
+              param['nickname'] = this.nick_name;
+              param['email'] = this.email;
+
               this.pageInfos.replacePath({ name: 'WatchLivePage', param: param }, true);
             } else if (this.webinars?.webinar?.type == 3) {
               ToastUtil.showToast("直播已结束");

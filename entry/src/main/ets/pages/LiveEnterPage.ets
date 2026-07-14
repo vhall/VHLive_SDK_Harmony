@@ -26,7 +26,7 @@ import { ToastUtil } from "watchkit/src/main/ets/action/ToastUtil";
 
 @Builder
 export function LiveEnterPageBuilder(name: string, param: object) {
-  LiveEnterPage({ third_id: param['third_id'], nick_name: param['nickname'] })
+  LiveEnterPage({ third_id: param['third_id'], nick_name: param['nickname'], email:param["email"] })
 }
 
 class RecordData {
@@ -42,11 +42,13 @@ struct LiveEnterPage {
   private model: VHWebinarWatchModel = new VHWebinarWatchModel();
   private third_id: string = "";
   private nick_name: string = "";
+  private email : string = "";
   @State message: string = 'Hello World';
   @State webinar_id: string = '';
   @State input_id: string = '';
   @State pageList: Array<string> = new Array();
   @State recordId: string = "";
+
   private turnToRecord: boolean = false;
   @State agreement: VHAgreement = new VHAgreement();
   private imBase?: VHIMServer;
@@ -169,7 +171,7 @@ struct LiveEnterPage {
       }
     });
     PromptActionClass.openDialog();
-    this.model.doInitWatch(this.webinar_id, this.recordId, this.nick_name, {
+    this.model.doInitWatch(this.webinar_id, this.recordId, this.nick_name,this.email,"","3", {
       onSucceed: (data: VHWebinarData) => {
         this.agreement = data.agreement as VHAgreement;
         this.webinars = data;
@@ -194,6 +196,7 @@ struct LiveEnterPage {
                     param['webinar_id'] = this.webinar_id;
                     param['nick_name'] = this.nick_name;
                     param['h5Live'] = this.h5Live;
+                    param['email'] = this.email;
                     this.pageInfos.pushPath({ name: 'InvitationCard', param: param })
                   } else {
                     this.model.doGetPlayerConfig(this.webinar_id, {
@@ -231,8 +234,9 @@ struct LiveEnterPage {
                           param['webinars'] = this.webinars
                           param['player_config'] = data;
                           param['webinar_id'] = this.webinar_id;
-                          VHSaaSDK.getInstance()
-                            .getWatchInfo(this.webinars.webinar.id.toString(), '', '', '',  {
+                          let joinEmail = this.webinar_info?.join_info?.email?.toString() ?? "";
+                          let joinNickname = this.webinar_info?.join_info?.nickname?.toString() ?? "";
+                          VHSaaSDK.getInstance().getWatchInfo(this.webinars.webinar.id.toString(), '', joinEmail, joinNickname, "","3", {
                               onSucceed: (data: VHWebinarData) => {
                                 this.agreement = data.agreement as VHAgreement;
                                 //this.functionConfig?.hard_login 是否开启了强制登录。

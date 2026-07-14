@@ -55,6 +55,7 @@ import { PreferencesUtil } from '../../utils/PreferencesUtil';
 import { VHBeautySDK } from '@vhall/vhall_beauty';
 import { image } from '@kit.ImageKit';
 import { common } from '@kit.AbilityKit';
+import { resourceManager } from '@kit.LocalizationKit';
 
 interface ISpeakData {
   img: ResourceStr
@@ -257,7 +258,9 @@ export struct ChatComponent {
       if(this.webinars.webinar.mode == 3 && this.webinars.join_info?.role_name != 2){//demo中互动直播不获取
         return;
       }
-      VHSaaSDK.getInstance().getWatchInfo(this.webinars.webinar.id.toString(), recordId, '', '',  {
+      let joinEmail = this.webinars?.join_info?.email?.toString() ?? "";
+      let joinNickname = this.webinars?.join_info?.nickname?.toString() ?? "";
+      VHSaaSDK.getInstance().getWatchInfo(this.webinars.webinar.id.toString(), recordId, joinEmail, joinNickname, "","3", {
         onSucceed: (data: VHWebinarData) => {
           this.agreement = data.agreement as VHAgreement;
         },
@@ -568,6 +571,7 @@ export struct ChatComponent {
     imMsg.data = msg.data as VHMsgData;
     let context = JSON.parse(msg.context as string) as VHContext;
     imMsg.role_name = context.role_name === '1' ? '主持人' : '';
+    imMsg.member_level = context.member_level;
     if (context?.replyMsg !== undefined) {
       // 回复消息
       let replyMessage = context?.replyMsg as VHReplyMessage;
@@ -576,8 +580,7 @@ export struct ChatComponent {
         if (replyContent !== null && replyContent.type === VHRoomEventType.IM_TYPE_TEXT) {
           let msgData = imMsg.data as VHMsgData;
           let replyContentStr = replyMessage.nickname  +"： "+replyContent.text_content + "\n\n" + "回复： " + imMsg.data?.text_content;
-          imMsg.data =
-            new VHMsgData(msgData.type, replyContentStr, replyContentStr, msgData.nickname, msgData.avatar, []);
+          imMsg.data = new VHMsgData(msgData.type, replyContentStr, replyContentStr, msgData.nickname, msgData.avatar, []);
         }
       }
     }
@@ -734,6 +737,7 @@ export struct ChatComponent {
         contact.msg_id = obj['msg_id'];
         contact.date_time = this.formatTime(obj['date_time']);
         contact.role_name = obj['context']?.role_name === 1 ? '主持人' : '';
+        contact.member_level = obj['context']?.member_level !== undefined ? obj['context']?.member_level : 0;
         if (obj['data']?.text_content.indexOf(VHRoomEventType.GIFT_MSG) > 0) {
           // 处理礼物数据
           if (obj['data']?.text_content.length > 0) {
@@ -1130,6 +1134,11 @@ export struct ChatComponent {
     }, 1000); // 每1000毫秒(1秒)执行一次
   }
 
+  getVipIcon(level:number):Resource{
+    // 拼接资源名 "vip"+数字
+    const resName = `vip${level}`;
+    return $r(`app.media.${resName}`);
+  }
   /**
    * 停止倒计时
    */
@@ -1219,27 +1228,8 @@ export struct ChatComponent {
     ];
   }
 
-  /**
-   * 高亮显示文本中的关键字。
-   *
-   * @param fullText 完整文本
-   * @param keyword 要高亮的关键字
-   * @param keywordColor 关键字颜色，默认红色
-   * @param normalColor 普通文本颜色，默认黑色
-   */
-  // @Builder
-  // getHighlightedText(
-  //   segments: Array<{ text: string; isKeyword: boolean }>,
-  //   keywordColor: ResourceColor = Color.Red,
-  //   normalColor: ResourceColor = Color.Black
-  // ) {
-  //   Text() {
-  //     ForEach(segments, (segment) => {
-  //       Span(segment.text)
-  //         .fontColor(segment.isKeyword ? keywordColor : normalColor);
-  //     });
-  //   }
-  // }
+
+
 
   @Builder
   HandSupBuilder(){
@@ -1331,6 +1321,32 @@ export struct ChatComponent {
                           right: 4,
                           bottom: 2
                         })
+                      if(this.webinars?.chat_level_switch == 1){
+                        if(this.webinars.chat_level_type == "default"){
+                          if(item.member_level > 0 && item.member_level < 22){
+                            Image(this.getVipIcon(item.member_level))
+                              .width(60)
+                              .height(16)
+                              .margin({ left: -5 })
+                              .borderRadius(8)
+                              .interpolation(ImageInterpolation.High)
+                              .syncLoad(true)
+                              .backgroundColor('#fffff0f2')
+                          }
+                        }else{
+                          if(this.webinars?.chat_level?.get(item.member_level) !== undefined){
+                            Image(this.webinars?.chat_level?.get(item.member_level))
+                              .width(60)
+                              .height(16)
+                              .margin({ left: -5 })
+                              .borderRadius(8)
+                              .interpolation(ImageInterpolation.High)
+                              .syncLoad(true)
+                              .backgroundColor('#fffff0f2')
+                          }
+                        }
+                      }
+
                       if (item.date_time!.length > 0) {
                         Text(item.date_time)
                           .fontColor(Color.Gray)

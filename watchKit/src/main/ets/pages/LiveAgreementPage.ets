@@ -218,7 +218,9 @@ export struct ReservationPage {
       params.holder = this.webinar_info?.webinar?.verify_tip!;
       params.join = (pwd: string) => {
         PromptActionClass.closeDialog(); // 调用关闭弹窗方法
-        VHSaaSDK.getInstance().getWatchInfo(this.webinar_info?.webinar?.id.toString()!,"", "", this.webinar_info?.join_info?.nickname!, {
+        let joinEmail = this.webinar_info?.join_info?.email?.toString() ?? "";
+        let joinNickname = this.webinar_info?.join_info?.nickname?.toString() ?? "";
+        VHSaaSDK.getInstance().getWatchInfo(this.webinar_info?.webinar?.id.toString()!,"", joinEmail,joinNickname,"", "3", {
             onSucceed: (webinar: VHWebinarData) => {
               this.webinar_info = webinar;
               VHSaaSDK.getInstance().getPlayerConfig(this.webinar_info?.webinar?.id.toString()!, {

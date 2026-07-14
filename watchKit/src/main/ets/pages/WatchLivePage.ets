@@ -121,7 +121,9 @@ export function WatchLivePageBuilder(name: string, param: object) {
   WatchLivePage({
     webinar_info: param['webinars'],
     player_config: param['player_config'],
-    chat_messages: param['chatMessages']
+    chat_messages: param['chatMessages'],
+    nickname: param['nickname'],
+    email: param['email'],
   })
 }
 
@@ -131,6 +133,8 @@ struct WatchLivePage {
   private screenWidth: number = 0;
   private screenHeight: number = 0;
   private directHeight: number = 0;
+  private nickname: string = "";
+  private email: string = "";
   private tabHeight: number = 0;
   private webinar_info?: VHWebinarData;
   private player_config?: VHPlayerConfig;
@@ -429,7 +433,7 @@ struct WatchLivePage {
               selfItem.streamAttr = stream.attribute;
               let attribute = JSON.parse(stream.attribute) as object;
               selfItem.nickName = attribute["nickName"];
-              if (attribute["roleName"] === 1 || attribute["role"] === "1") {
+              if (attribute["roleName"] === 1 || attribute["role"] === "1" ) {
                 if (!this.streamList.some(item => item.isMain)) {
                   selfItem.isMain = true;
                 }
@@ -762,7 +766,9 @@ struct WatchLivePage {
       if (this.webinar_info.webinar.type == 5) {
         recordId = this.webinar_info.record?.record_id!; //回放获取当前回放id
       }
-      VHSaaSDK.getInstance().getWatchInfo(this.webinar_info.webinar.id.toString(), recordId, '', '',  {
+      this.email = this.webinar_info?.join_info?.email?.toString() ?? "";
+      this.nickname = this.webinar_info?.join_info?.nickname?.toString() ?? "";
+      VHSaaSDK.getInstance().getWatchInfo(this.webinar_info.webinar.id.toString(), recordId, this.email,   this.nickname , '','3', {
         onSucceed: (data: VHWebinarData) => {
           this.agreement = data.agreement as VHAgreement;
         },

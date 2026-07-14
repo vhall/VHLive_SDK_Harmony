@@ -17,23 +17,7 @@ export class VHWebinarWatchModel {
 
   }
 
-  public doInitWatch(id: string, nickname: string, callback: VHWatchWebinarInfoCallback) {
-    VHSaaSDK.getInstance().getWatchInfo(id,"", "", nickname, {
-      onSucceed: (data: VHWebinarData) => {
-        if (callback) {
-          callback.onSucceed(data);
-        }
-      },
-      onFailure: (errorCode, errorMsg) => {
-        if (callback) {
-          callback.onFailure(errorCode, errorMsg);
-        }
-      }
-    });
-  }
-
   public doGetPlayerConfig(id: string, callback: VHPlayerConfigCallback) {
-
     VHSaaSDK.getInstance().getPlayerConfig(id, {
       onSucceed: (data: VHPlayerConfig) => {
         if (callback) {

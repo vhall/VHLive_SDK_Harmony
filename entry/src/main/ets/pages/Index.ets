@@ -15,7 +15,7 @@ import { image } from '@kit.ImageKit'
 @Component
 struct Index {
   private dataPreferences: preferences.Preferences | null = null;
-  @State loginType: 'password' | 'thirdParty' | 'role' = 'thirdParty' // 当前登录类型
+@State loginType: 'password' | 'thirdParty' | 'emailLogin' |'role' = 'thirdParty' // 当前登录类型
   @State username: string = '' // 密码登录账号
   @State password: string = '' // 密码登录密码
   @State thirdPartyId: string = '' // 三方登录ID
@@ -127,7 +127,16 @@ struct Index {
               })
                 .onChange(val => this.thirdPartyHead = val)
             }.margin(15)
+          }
 
+          //邮箱登录
+          if (this.loginType === 'emailLogin') {
+            Column({ space: 20 }) {
+              TextInput({ text: "", placeholder: '昵称' })
+                .onChange(val => this.thirdPartyId = val)
+              TextInput({ text: "", placeholder: '邮箱' })
+                .onChange(val => this.thirdPartyPwd = val)
+            }.margin(15)
           }
 
           // 口令登录表单
@@ -157,6 +166,16 @@ struct Index {
 
           // 登录方式切换
           Row() {
+            Radio({ value: '昵称和邮箱登录', group: 'radioGroup' })
+              .onChange((isChecked: boolean) => {
+                if (isChecked) {
+                  //需要执行的操作
+                  this.loginType = 'emailLogin';
+                  this.roleSelect = false;
+                }
+              })
+              .colorBlend(Color.Red)
+            Text('昵称和邮箱登录')
             Radio({ value: '密码登录', group: 'radioGroup' })
               .onChange((isChecked: boolean) => {
                 if (isChecked) {
@@ -167,6 +186,10 @@ struct Index {
               })
               .colorBlend(Color.Red)
             Text('密码登录')
+
+          }.margin(20)
+
+          Row() {
             Radio({ value: '三方登录', group: 'radioGroup' })
               .onChange((isChecked: boolean) => {
                 if (isChecked) {
@@ -215,8 +238,6 @@ struct Index {
             }
             .padding({left: 10})
           }.margin(20)
-
-
 
 
           // 登录按钮
@@ -290,7 +311,13 @@ struct Index {
         }
       });
 
-    } else {
+    } else if(this.loginType === 'emailLogin') {
+      //昵称和邮箱观看时，可以不使用loginByThirdId，仅在getWatchInfo方法中填写昵称和邮箱即可，减少用户注册过程。
+      let param: object = new Object()
+      param['nickname'] = this.thirdPartyId ;
+      param['email'] = this.thirdPartyPwd;
+      this.pathStack.pushPath({ name: 'LiveEnterPage', param: param }, true);
+    }else {
       // 调用三方登录接口
       console.log(`三方登录：${this.thirdPartyId} / ${this.thirdPartyPwd}`)
       VHSaaSDK.getInstance().loginByThirdId(this.thirdPartyId, this.thirdPartyPwd, this.thirdPartyHead, {

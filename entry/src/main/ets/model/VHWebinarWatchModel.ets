@@ -17,8 +17,8 @@ export class VHWebinarWatchModel {
 
   }
 
-  public doInitWatch(id: string,record_id:string, nickname: string, callback: VHWatchWebinarInfoCallback) {
-    VHSaaSDK.getInstance().getWatchInfo(id, record_id, "", nickname, {
+  public doInitWatch(id: string,record_id:string, nickname: string,email:string,channel:string,member_level:string, callback: VHWatchWebinarInfoCallback) {
+    VHSaaSDK.getInstance().getWatchInfo(id, record_id, email, nickname,channel,member_level, {
       onSucceed: (data: VHWebinarData) => {
         if (callback) {
           callback.onSucceed(data);
