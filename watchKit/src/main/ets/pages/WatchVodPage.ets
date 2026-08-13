@@ -78,7 +78,7 @@ struct WatchVodPage {
   @State needExpand: boolean = false;
   @State menusId: string = '';
   @Provide chatBannedMode:number = 0;
-  @Provide chatNickNameEnc:number = 0;
+  @Provide chatNickNameEnc:string = "0";
   @Provide questionnairePush: VHQuestionnairePushModel | null = null
   @Provide examData: VHExaminationModel | null = null
   @Prop imBase: VHIMServer;
@@ -128,8 +128,7 @@ struct WatchVodPage {
     this.textData = VHIntroduction.getIntroduction(this.webinar_info?.webinar?.introduction ?? '');
     // 获得房间状态及公共配置信息
     this.getRoomStatus();
-    VHSaaSDK.getInstance()
-      .getConfigList("3", this.webinar_info?.webinar?.id.toString()!,
+    VHSaaSDK.getInstance().getConfigList( this.webinar_info?.webinar?.id.toString()!,
         this.webinar_info?.webinar?.userinfo.user_id.toString()!, {
           onSucceed: (data: VHConfigList) => {
             this.functionConfig = data;

@@ -106,7 +106,7 @@ import { VhallCaptureFrame, VhallCodeNum, VhallMediaType, VhallStream,
   VHSpeakListInfo } from '@vhall/vhall_rtc';
 import { VHRTCUserInfo } from '../components/rtc/VHRTCUserInfo';
 import { VHRTCUserComponent } from '../components/rtc/VHRTCUserComponent';
-import { VhallBeautyFrame, VHBeautyDataService, VHBeautySDK } from '@vhall/vhall_beauty';
+import { VhallBeautyFrame, VHBeautyDataService, VHBeautyFrameFormat, VHBeautySDK } from '@vhall/vhall_beauty';
 import { PreferencesUtil } from '../utils/PreferencesUtil';
 import { AVSessionManager } from '../utils/AVSessionManager';
 
@@ -146,7 +146,7 @@ struct GuestLivePage {
   @Provide room_id: string = ''
   @Provide signTime: number = 0;
   @Provide chatBannedMode: number = 0;
-  @Provide chatNickNameEnc: number = 0;
+  @Provide chatNickNameEnc: string = "0";
   @State announcement: VHAnnouncementData = new VHAnnouncementData();
   @Provide AnnouncementList: VHAnnouncementNewsItem[] = []
   @Provide announcementValue: string = ''
@@ -207,7 +207,7 @@ struct GuestLivePage {
         //连接消息服务, 此方法会建立websocket进行消息的接收处理。在线状态也是通过此方法控制
         this.imBase = new VHIMServer(this);
         this.imBase.join(this.webinar_info!);
-        VHSaaSDK.getInstance().getConfigList("3", this.webinar_info?.webinar?.id.toString()!,
+        VHSaaSDK.getInstance().getConfigList(this.webinar_info?.webinar?.id.toString()!,
           this.webinar_info?.webinar?.userinfo.user_id.toString()!, {
             onSucceed: (data: VHConfigList) => {
               this.functionConfig = data;
@@ -258,14 +258,14 @@ struct GuestLivePage {
           preferences.getPreferencesSync(this.getUIContext().getHostContext()?.getApplicationContext(), options);
         this.isAnnouncementShown = this.dataPreferences.getSync("isAnnouncementShown", "") as boolean
         this.chatBannedMode = this.room_tool?.banned_mode as number;
-        this.chatNickNameEnc = this.functionConfig?.chat_nickname_encryption as number;
+        this.chatNickNameEnc = this.functionConfig?.chat_nickname_encryption.toString()!;
         const context = this.getUIContext().getHostContext();
         // 是否开启美颜功能
         PreferencesUtil.putSync("isBeautyEnable", true);
         if(this.webinar_info && context) {
           this.userId = this.webinar_info?.join_info?.third_party_user_id!;
           VHBeautySDK.getInstance().init(this.webinar_info?.webinar?.id.toString()!,
-            this.webinar_info?.webinar?.userinfo.user_id.toString()!,{
+            this.webinar_info?.webinar?.userinfo.user_id.toString()!,VHBeautyFrameFormat.VHBeautyFrameFormat_NV21,{
               onSucceed: (data: number) => {
                 ToastUtil.showToast("美颜SDK初始化成功");
               },

@@ -20,7 +20,7 @@ import { VhallMediaCaptureFrame,
   VhallPusherResolution, VhallXComponentView, VHPusherSDK } from "@vhall/vhall_pusher";
 import { VHPusherUserInfo } from "../components/pusher/VHPusherUserInfo";
 import { image } from "@kit.ImageKit";
-import { VhallBeautyFrame, VHBeautySDK } from "@vhall/vhall_beauty";
+import { VhallBeautyFrame, VHBeautyFrameFormat, VHBeautySDK } from "@vhall/vhall_beauty";
 import { WindowUtil } from "../utils/WindowUtil";
 
 const RECONNECT_TIMEOUT: number = 3000;
@@ -223,7 +223,7 @@ struct VideoLivePage {
         if(this.webinar_info && context) {
           this.userId = this.webinar_info?.join_info?.third_party_user_id!;
           VHBeautySDK.getInstance().init(this.webinar_info?.webinar?.id.toString()!,
-            this.webinar_info?.webinar?.userinfo.user_id.toString()!,{
+            this.webinar_info?.webinar?.userinfo.user_id.toString()!,VHBeautyFrameFormat.VHBeautyFrameFormat_NV21,{
               onSucceed: (data: number) => {
                 ToastUtil.showToast("美颜SDK初始化成功");
               },
@@ -269,11 +269,11 @@ struct VideoLivePage {
                 console.info("bitrate: " + bitrate);
                 this.bitRate = Number(bitrate).toString();
               },
-              onCaptureFrame: (src: VhallMediaCaptureFrame, dst: VhallMediaCaptureFrame): void => {
-                let srcFrame = new VhallBeautyFrame(src.data, src.width, src.height, src.timestamp);
-                let dstFrame = new VhallBeautyFrame(dst.data, dst.width, dst.height, dst.timestamp);
-                VHBeautySDK.getInstance().renderWithInput(srcFrame, dstFrame);
-                dst.data = dstFrame.data;
+              onCaptureFrame: (src: ArrayBuffer,width:number,height:number, dst: VhallMediaCaptureFrame): void => {
+                // let srcFrame = new VhallBeautyFrame(src, width, height, src.timestamp);
+                // let dstFrame = new VhallBeautyFrame(dst.data, dst.width, dst.height, dst.timestamp);
+                // VHBeautySDK.getInstance().renderWithInput(srcFrame, dstFrame);
+                dst.data = src;
               }
             },
             {

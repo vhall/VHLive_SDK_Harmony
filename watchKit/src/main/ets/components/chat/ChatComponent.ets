@@ -56,6 +56,7 @@ import { VHBeautySDK } from '@vhall/vhall_beauty';
 import { image } from '@kit.ImageKit';
 import { common } from '@kit.AbilityKit';
 import { resourceManager } from '@kit.LocalizationKit';
+import { ChatSettingDialog } from './ChatSettingDialog';
 
 interface ISpeakData {
   img: ResourceStr
@@ -101,7 +102,33 @@ export struct ChatComponent {
   @State welcomeLoginUser: string = '';
   @State agreement: VHAgreement = new VHAgreement();
   private animationId: number = 0 // 动画ID
-  @Consume chatNickNameEnc:number;
+  @Consume @Watch('changedPropertyName')  chatNickNameEnc:string;
+  @State watchHost: boolean = false;
+  @State watchContext: boolean = false;
+  @State hideEffect: boolean = false;
+  @State showWatchHost: boolean = false;
+  @State showWatchContext: boolean = false;
+  @State showEffect: boolean = false;
+
+  private chatSettingController: CustomDialogController = new CustomDialogController({
+    builder: ChatSettingDialog({
+      watchHost: this.watchHost,
+      watchContextState:this.showWatchContext,
+      watchContext : this.watchContext,
+      watchHostState:this.showWatchHost,
+      hideEffect : this.hideEffect,
+      hideEffectState : this.showEffect,
+      onChatSetting: (host: boolean, ctx: boolean, effect: boolean) => {
+        this.watchHost = host;
+        this.watchContext = ctx;
+        this.hideEffect = effect;
+        this.handleRefresh();
+    }}),
+    customStyle: true,
+    alignment: DialogAlignment.Bottom,
+  })
+
+
   // emoji表情数组
   private readonly emojis: string[] = [
     '❤️', '🧡', '💛', '💚', '💙', '💜',
@@ -136,6 +163,8 @@ export struct ChatComponent {
   @State HandSupText: string = "申请上麦";
   @State isCounting: boolean = false; // 是否正在倒计时
   @State isPushPixmap: boolean = false; // 图片推流
+  private chatMsgSetRecommend:VHChatMsgSetRecommend = new VHChatMsgSetRecommend;
+  @State chatMsgRecommend :string = "";
   private countdownTimer: number | null = null; // 倒计时定时器ID
   private dialogController: CustomDialogController = new CustomDialogController({
     builder: ConnectInviteDialog({roomId:this.webinars?.interact?.room_id!}),
@@ -151,6 +180,9 @@ export struct ChatComponent {
     this.initTimer();
     this.enableWelcome = this.functionConfig?.live_chat_welcome == 1 ? true : false;
     this.welcomeMsg = this.functionConfig?.live_chat_welcome_msg!;
+    this.chatMsgSetRecommend = this.webinars?.chat_msg_recommend!;
+    this.setChatMsgRecommend(this.webinars?.chat_msg_recommend!);
+
     this.giftNode = new ComponentContent(this.getUIContext(), wrapBuilder(createGiftView), this.webinars!);
     // PromptActionClass.setContext(this.getUIContext());
     // PromptActionClass.setContentNode(this.giftNode);
@@ -303,6 +335,29 @@ export struct ChatComponent {
     });
   }
 
+  brToNewLine(text: string): string {
+    if (!text) return ''
+    // 匹配 <br> <br > <br/> <br /> 所有写法，全局不区分大小写
+    return text.replace(/<br\s*\/?>/gi, '\n')
+  }
+
+  private setChatMsgRecommend(recommend:VHChatMsgSetRecommend){
+    if(recommend.msg_account_role_type == 1){
+      this.chatMsgRecommend = "[精选] 主持人: " +recommend.msg_content;
+    }if(recommend.msg_account_role_type == 3){
+      this.chatMsgRecommend = "[精选] 助理: " + recommend.msg_content;
+    }if(recommend.msg_account_role_type == 4){
+      this.chatMsgRecommend = "[精选] 嘉宾: " +recommend.msg_content;
+    }if(recommend.msg_account_role_type == 2){
+      if(this.chatNickNameEnc == "1"){
+        this.chatMsgRecommend = "[精选] " + ChatTools.getLimitString(recommend.msg_account_nickname!, 2) + "**  :" + recommend.msg_content;
+      }else{
+        this.chatMsgRecommend = "[精选] " + recommend.msg_account_nickname + ": " + recommend.msg_content;
+      }
+    }
+    this.chatMsgRecommend = this.brToNewLine(this.chatMsgRecommend );
+  }
+
   subscribePaperEndMessage() {
     EmitterUtil.subscribe(VHRoomEventType.PAPER_SEND_RANK, (msgData: EmitterMsgData) => {
       let messageModel: VHExamRank = msgData.data as VHExamRank;
@@ -354,12 +409,9 @@ export struct ChatComponent {
   subscribeChatMsgSetRecommend() {
     EmitterUtil.subscribe(VHRoomEventType.CHAT_MSG_SET_RECOMMEND, (msgData: EmitterMsgData) => {
       console.log(`收到设置精选消息，类型：${VHRoomEventType.CHAT_MSG_SET_RECOMMEND}`);
-      let chatMsgSetRecommend: VHChatMsgSetRecommend = msgData.data as VHChatMsgSetRecommend;
-      if (chatMsgSetRecommend!) {
-        if (typeof chatMsgSetRecommend === 'string') {
-          const parsedMessage: VHChatDeleteMsg = JSON.parse(chatMsgSetRecommend) as VHChatDeleteMsg;
-        } else {
-        }
+      this.chatMsgSetRecommend = msgData.data as VHChatMsgSetRecommend;
+      if (  this.chatMsgSetRecommend!) {
+        this.setChatMsgRecommend(this.chatMsgSetRecommend);
       }
     });
   }
@@ -369,10 +421,7 @@ export struct ChatComponent {
       console.log(`收到取消精选消息，类型：${VHRoomEventType.CHAT_MSG_DEL_RECOMMEND}`);
       let chatMsgDelRecommend: VHChatMsgDelRecommend = msgData.data as VHChatMsgDelRecommend;
       if (chatMsgDelRecommend!) {
-        if (typeof chatMsgDelRecommend === 'string') {
-          const parsedMessage: VHChatMsgDelRecommend = JSON.parse(chatMsgDelRecommend) as VHChatMsgDelRecommend;
-        } else {
-        }
+        this.chatMsgRecommend = "";
       }
     });
   }
@@ -584,6 +633,11 @@ export struct ChatComponent {
         }
       }
     }
+
+    if(msg.sender_id != this.webinars?.webinar?.userinfo.user_id.toString() && this.watchHost){
+      return
+    }
+
     this.historyData.push(imMsg);
   }
 
@@ -641,8 +695,8 @@ export struct ChatComponent {
   //初始化
   initChatMessage(pageNo: number) {
     try {
-      VHSaaSDK.getInstance()
-        .chatGetList(this.webinars?.interact?.room_id!, pageNo, this.pageSize, '', '', '', 0, 0, '', {
+      let senderId =  this.watchHost ? this.webinars?.webinar?.userinfo.user_id.toString() : "";
+      VHSaaSDK.getInstance().chatGetList(this.webinars?.interact?.room_id!, pageNo, this.pageSize, '', '', '',senderId!, 0, 0, '', {
           onSucceed: (data: VHChatMessageList) => {
             this.total = data.total;
             this.pageNo = pageNo;
@@ -1295,6 +1349,18 @@ export struct ChatComponent {
     // Navigation(this.pageInfos) {
     Column() {
       Stack() {
+        if(this.chatMsgRecommend && this.chatMsgRecommend?.length > 0){
+          Row(){
+            Text(this.chatMsgRecommend)
+            .maxLines(2)
+            .textOverflow({ overflow: TextOverflow.Ellipsis })
+          }.backgroundColor(Color.Orange)
+          .height(60)
+          .width("100%")
+          .padding(10)
+          .zIndex(1)
+        }
+
         // 聊天界面内容区
         Column() {
           List({ space: 4, scroller: this.scroller }) {
@@ -1308,7 +1374,7 @@ export struct ChatComponent {
                     .borderRadius(20)
                   Column() {
                     Row() {
-                      Text(this.chatNickNameEnc == 0 ? ChatTools.getLimitString(item.nickname!, 8) : ChatTools.getLimitString(item.nickname!, 2) )
+                      Text(this.chatNickNameEnc == "0" ? ChatTools.getLimitString(item.nickname!, 8) : ChatTools.getLimitString(item.nickname!, 2) )
                         .fontColor(Color.Gray).fontSize(12).padding({ right: 10 })
                       Text(item.role_name!)
                         .fontColor(Color.Red)
@@ -1656,6 +1722,35 @@ export struct ChatComponent {
               .height(30)
               .borderRadius(20)
 
+
+            Button()
+              .width(28)
+              .height(28)
+              .backgroundImage($r("app.media.chat_setting"))
+              .backgroundImageSize(ImageSize.Cover)
+              .backgroundColor(Color.White)
+              .onClick(()=>{
+                VHSaaSDK.getInstance()
+                  .getConfigList(this.webinars?.webinar?.id.toString()!,
+                    this.webinars?.webinar?.userinfo.user_id.toString()!, {
+                      onSucceed: (data: VHConfigList) => {
+                        this.showWatchHost= data.show_host_only == 1;
+                        this.showWatchContext = data.show_chat_only== 1;
+                        this.showEffect = data.show_effect== 1;
+                        if(data.show_chat_only == 1 || data.show_effect == 1 || data.show_host_only == 1){
+                          this.chatSettingController.open();
+                        }else{
+                          ToastUtil.showToast("消息筛选已被禁用");
+                        }
+                      },
+                      onFailure: (errorCode: number, errorMsg: string) => {
+                        ToastUtil.showToast("permissionsCheck:" + errorMsg);
+                      }
+                    });
+
+
+              })
+
             TextInput({
               placeholder: this.chatDisable ? "您已被禁言" : "参与聊天", text: $$this.messageInput
             })
@@ -1821,7 +1916,9 @@ export struct ChatComponent {
         }
         .backgroundColor("#FAFAFA")
         .layoutWeight(1)
+        .zIndex(0)
       }
+      .alignContent(Alignment.Top)
     }
     .width('100%')
     .height('100%')
@@ -1831,6 +1928,11 @@ export struct ChatComponent {
   }
 
   // }
+  changedPropertyName(changedPropertyName: string) {
+    if(this.chatMsgRecommend.length > 0){
+        this.setChatMsgRecommend(this.chatMsgSetRecommend);
+    }
+  }
 }
 
 @CustomDialog
@@ -1895,3 +1997,5 @@ struct ConnectInviteDialog {
     }
   }
 }
+
+

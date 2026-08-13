@@ -367,7 +367,7 @@ export struct FloatingWindow {
   @Prop Floating: boolean = true
   @Prop GoodsListData: VHGoodsInfo[]
   @Prop GoodsData: VHGoodsInfo
-  @Prop ActivitySettings: VHPushGoodsChangeData
+  @Consume ActivitySettings: VHGoodsActivitySettings
   @Require webinars: VHWebinarData;
   controller: webview.WebviewController = new webview.WebviewController();
 
@@ -444,7 +444,7 @@ export struct FloatingWindow {
                 .fontColor('#fff')
             }
           }
-          Text('抢')
+          Text(this.ActivitySettings?.btn_label?.length > 0 ? this.ActivitySettings.btn_label : '抢')
             .fontSize(16)
             .fontColor('#fff')
             .fontWeight(700)

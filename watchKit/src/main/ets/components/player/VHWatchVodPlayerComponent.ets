@@ -136,7 +136,7 @@ export struct VHWatchVodPlayerComponent {
     });
 
     VHSaaSDK.getInstance()
-      .getConfigList("3", this.webinars?.webinar?.id.toString()!,
+      .getConfigList( this.webinars?.webinar?.id.toString()!,
         this.webinars?.webinar?.userinfo.user_id.toString()!, {
           onSucceed: (data: VHConfigList) => {
             this.configList = data;
