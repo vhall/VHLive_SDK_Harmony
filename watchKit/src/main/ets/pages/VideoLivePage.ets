@@ -212,7 +212,7 @@ struct VideoLivePage {
     VHSaaSDK.getInstance().getLiveInit(this.webinar_id, this.nick_name, '', {
       onSucceed: (data: VHWebinarData) => {
         if (data.webinar_show_type === 1) {
-          ToastUtil.showToast("不支持横屏互动连麦");
+          ToastUtil.showToast("Demo 不支持横屏活动");
           this.pageInfos.pop();
         }
         this.webinar_info = data;
@@ -223,9 +223,10 @@ struct VideoLivePage {
         if(this.webinar_info && context) {
           this.userId = this.webinar_info?.join_info?.third_party_user_id!;
           VHBeautySDK.getInstance().init(this.webinar_info?.webinar?.id.toString()!,
-            this.webinar_info?.webinar?.userinfo.user_id.toString()!,VHBeautyFrameFormat.VHBeautyFrameFormat_NV21,{
+            this.webinar_info?.webinar?.userinfo.user_id.toString()!,this.version == 1 ? VHBeautyFrameFormat.VHBeautyFrameFormat_NV21 : VHBeautyFrameFormat.VHBeautyFrameFormat_RGBA,{
               onSucceed: (data: number) => {
                 ToastUtil.showToast("美颜SDK初始化成功");
+                VHPusherSDK.getInstance().enableCustomDataProcess(true);
               },
               onFailure: (errorCode: number, errorMsg: string) => {
                 ToastUtil.showToast("美颜SDK初始化失败");
@@ -269,11 +270,13 @@ struct VideoLivePage {
                 console.info("bitrate: " + bitrate);
                 this.bitRate = Number(bitrate).toString();
               },
-              onCaptureFrame: (src: ArrayBuffer,width:number,height:number, dst: VhallMediaCaptureFrame): void => {
-                // let srcFrame = new VhallBeautyFrame(src, width, height, src.timestamp);
-                // let dstFrame = new VhallBeautyFrame(dst.data, dst.width, dst.height, dst.timestamp);
-                // VHBeautySDK.getInstance().renderWithInput(srcFrame, dstFrame);
-                dst.data = src;
+              onCaptureFrame: (src: ArrayBuffer,width:number,height:number, dst:VhallMediaCaptureFrame): void => {
+                if(this.version == 1){
+                  dst.data = VHBeautySDK.getInstance().renderWithNV21Input(src,width,height);
+                }else{
+                  dst.data = VHBeautySDK.getInstance().renderWithInputRGBASync(src,width,height);
+                }
+
               }
             },
             {

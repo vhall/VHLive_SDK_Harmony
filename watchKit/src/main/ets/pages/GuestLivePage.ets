@@ -414,10 +414,7 @@ struct GuestLivePage {
                 console.info("取消订阅远端流：" + code + " " + msg);
               },
               onCaptureFrame: (src: VhallCaptureFrame, dst: VhallCaptureFrame): void => {
-                let srcFrame = new VhallBeautyFrame(src.data, src.width, src.height, src.timestamp);
-                let dstFrame = new VhallBeautyFrame(dst.data, dst.width, dst.height, dst.timestamp);
-                VHBeautySDK.getInstance().renderWithInput(srcFrame, dstFrame);
-                dst.data = dstFrame.data;
+                dst.data = VHBeautySDK.getInstance().renderWithNV21Input(src.data,src.width,src.height);
               }
             },
             {
