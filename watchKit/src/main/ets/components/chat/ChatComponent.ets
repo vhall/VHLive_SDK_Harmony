@@ -1,4 +1,4 @@
-import { ComponentContent, CustomContentDialog, KeyboardAvoidMode, LengthMetrics } from '@kit.ArkUI';
+import { ComponentContent, CustomContentDialog, KeyboardAvoidMode, LengthMetrics, promptAction } from '@kit.ArkUI';
 import {
   VHGiftMessageInfo,
   VHLikeIcon,
@@ -30,6 +30,7 @@ import {
   VHChatMsgSetRecommend,
   VHChatMsgDelRecommend,
   VHExamList,
+  VHCommonConfig,
 } from '@vhall/vhall_live';
 import { EmitterMsgData, EmitterUtil } from '../../util/EmitterUtil';
 import { ToastUtil } from '../../action/ToastUtil';
@@ -76,6 +77,7 @@ export struct ChatComponent {
   @Prop isLive: boolean; //是否直播
   @Prop welcomeContent: string;
   @Prop imBase: VHIMServer;
+  @Prop commonConfig: VHCommonConfig| null = null;
   @State avatar: string | undefined = "";
   @State inputText: string = "参与聊天";
   @State messageInput: string = '';
@@ -712,6 +714,13 @@ export struct ChatComponent {
               this.reachStatus = 2
             }
             this.changeChatMessage(data);
+
+            if(this.commonConfig?.chat_announcement?.enable == 1){
+              let data = new VHMsgData("text", this.commonConfig?.chat_announcement.content, this.commonConfig?.chat_announcement.content,"", "", []);
+              let contact = new VHContent("","",data,"");
+              this.historyData.push(contact)
+            }
+
             setTimeout(() => {
               this.scrollToBottom();
             }, 100);
@@ -1427,6 +1436,20 @@ export struct ChatComponent {
                       Row(){
                         Text(EmojiTool.convertEmojiTags(item.data?.text_content!))
                           .fontSize(12)
+                          .gesture(
+                            // 设置长按手势识别器识别的手势的最大移动距离为200px。
+                            LongPressGesture({ repeat: false, duration: 1000 })
+                            // 由于repeat设置为true，长按动作存在时会连续触发，触发间隔为duration（默认值500ms）。
+                              .onAction((event: GestureEvent) => {
+                                if (event) {
+                                  promptAction.showDialog({ message: `暂无可用打开方式` })
+                                }
+                              })
+                              // 长按动作一结束触发。
+                              .onActionEnd(() => {
+                                ToastUtil.showToast("长按2")
+                              })
+                          )
                           .padding({
                             top: 6,
                             bottom: 6,
@@ -1435,6 +1458,8 @@ export struct ChatComponent {
                           })
                           .borderRadius(8)
                           .backgroundColor(item.data?.type === VHRoomEventType.GIFT_MSG ? '#fffff0f2' : Color.White)
+
+
                         if (item.data?.type === VHRoomEventType.GIFT_MSG)
                         Column() {
                           ForEach(item.data!.image_urls, (url: string) => {

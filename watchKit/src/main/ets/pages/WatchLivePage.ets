@@ -2147,6 +2147,7 @@ struct WatchLivePage {
                             ChatComponent({
                               webinars: this.webinar_info,
                               imBase: this.imBase,
+                              commonConfig:this.commonConfig,
                               functionConfig: this.functionConfig,
                               room_tool: this.room_tool,
                               isLive: true,
